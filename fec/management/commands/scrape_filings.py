@@ -154,11 +154,11 @@ class Command(BaseCommand):
                     else:
                         log.write('filing {} already exists\n'.format(filing))
                         continue
-                log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
+                    log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
 
             except:
                 log.write(traceback.format_exc())
-                log.write("{}: Finished filing {}, FAILED!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
+                log.write("{}: Run failed.\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
 
             if logfile:
