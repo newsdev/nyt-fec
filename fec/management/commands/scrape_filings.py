@@ -56,6 +56,7 @@ class Command(BaseCommand):
         url += "&max_receipt_date={}".format(end_date)
 
         while True:
+            #keep looping if an interval is provided, this is mostly for testing
             if logfile:
                 log = open(logfile, 'a')
             else:
@@ -64,6 +65,7 @@ class Command(BaseCommand):
                 filings = []
                 page = 1
                 while True:
+                    #get new filing ids from FEC API
                     resp = requests.get(url+"&page={}".format(page))
                     page += 1
                     files = resp.json()
@@ -75,6 +77,7 @@ class Command(BaseCommand):
 
                 good_filings = []
                 for filing in filings:
+                    #download filings
                     filename = 'filings/{}.csv'.format(filing)
                     if filename not in os.listdir('filings'):
                         file_url = 'http://docquery.fec.gov/csv/{}/{}.csv'.format(str(filing)[-3:],filing)
@@ -83,6 +86,7 @@ class Command(BaseCommand):
                         else:
                             os.system('curl -o {} {}'.format(filename, file_url))
                     with open(filename, "r") as filing_csv:
+                        #pop each filing open, check the filing type, and add to queue if we want this one
                         reader = csv.reader(filing_csv)
                         next(reader)
                         if next(reader)[0].replace('A','').replace('N','') in ['F3','F3X','F3P']:
@@ -90,6 +94,7 @@ class Command(BaseCommand):
 
                 filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
                 for filing in good_filings:
+                    #this is the load loop
                     log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
                     filename = 'filings/{}.csv'.format(filing)
                     try:
@@ -98,6 +103,8 @@ class Command(BaseCommand):
                         log.write("fec2json failed {} {}\n".format(filing, e))
                         continue
                     try:
+                        #this means the filing already exists
+                        #TODO add checking to see if import was successful
                         f = Filing.objects.get(filing_id=filing)
                     except:
                         clean_filing_dict = {k: filing_dict[k] for k in set(filing_fieldnames).intersection(filing_dict.keys())}
@@ -169,7 +176,3 @@ class Command(BaseCommand):
                 break
 
 
-    #probably here we want to:
-    #1. check whether the filing is in the queue yet
-    #2. check whether it's already loaded
-    #3. pop it open and see if it's a filing type we want to load
