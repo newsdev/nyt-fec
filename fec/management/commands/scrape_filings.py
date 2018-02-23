@@ -88,9 +88,15 @@ class Command(BaseCommand):
                     with open(filename, "r") as filing_csv:
                         #pop each filing open, check the filing type, and add to queue if we want this one
                         reader = csv.reader(filing_csv)
-                        next(reader)
-                        if next(reader)[0].replace('A','').replace('N','') in ['F3','F3X','F3P']:
-                            good_filings.append(filing)
+                        try:
+                            next(reader)
+                        except:
+                            log.write("filing {} has no lines.\n".format(filing))
+                            continue
+                        form_line = next(reader)
+                        if form_line[0].replace('A','').replace('N','') in ['F3','F3X','F3P','F24']:
+                            if form_line[1] not in ['C00401224']: #bad filings we don't want to load (actblue!)
+                                good_filings.append(filing)
 
                 filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
                 for filing in good_filings:
@@ -107,6 +113,32 @@ class Command(BaseCommand):
                         #TODO add checking to see if import was successful
                         f = Filing.objects.get(filing_id=filing)
                     except:
+                        #deal with amended filings
+                        if filing_dict['amendment']:
+                            amends_filing = int(filing_dict['amends_filing'])
+                            try:
+                                amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
+                            except IndexError:
+                                log.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(filing, amends_filing))
+                            else:
+                                amended_filing.active = False
+                                amended_filing.status = 'SUPERSEDED'
+                                amended_filing.save()
+                                ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                                ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                                ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+
+                        if filing_dict['form_type'] in ['F3','F3X','F3P']:
+                            #could be a periodic, so see if there are covered forms that need to be deactivated
+                            coverage_start_date = filing_dict['coverage_start_date']
+                            coverage_end_date = filing_dict['coverage_end_date']
+                            covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
+                                                                    date_signed__lte=coverage_end_date,
+                                                                    form='F24')
+                            covered_filings.update(active=False, status='COVERED')
+                            covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
+                            covered_transactions.update(active=False, status='COVERED')
+
                         clean_filing_dict = {k: filing_dict[k] for k in set(filing_fieldnames).intersection(filing_dict.keys())}
                         clean_filing_dict['filing_id'] = filing
                         clean_filing_dict['filer_id'] = filing_dict['filer_committee_id_number']
@@ -139,19 +171,20 @@ class Command(BaseCommand):
                         sche_count = 0
                         if 'itemizations' in filing_dict:
                             if 'SchA' in filing_dict['itemizations']:
+                                #TODO: move filing id addition to fec2json; bulk insert here
                                 for line in filing_dict['itemizations']['SchA']:
-                                    s = ScheduleA.objects.create(filing_id=filing, **line)
-                                    s.save()
+                                    line['filing_id'] = filing
+                                    ScheduleA.objects.create(**line)
                                     scha_count += 1
                             if 'SchB' in filing_dict['itemizations']:
                                 for line in filing_dict['itemizations']['SchB']:
-                                    s = ScheduleB.objects.create(filing_id=filing, **line)
-                                    s.save()
+                                    line['filing_id'] = filing
+                                    ScheduleB.objects.create(**line)
                                     schb_count += 1
                             if 'SchE' in filing_dict['itemizations']:
                                 for line in filing_dict['itemizations']['SchE']:
-                                    s = ScheduleE.objects.create(filing_id=filing, **line)
-                                    s.save()
+                                    line['filing_id'] = filing
+                                    ScheduleE.objects.create(**line)
                                     schb_count += 1
                         log.write("inserted {} schedule A's\n".format(scha_count))
                         log.write("inserted {} schedule B's\n".format(schb_count))

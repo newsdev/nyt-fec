@@ -12,6 +12,11 @@ class BaseModel(models.Model):
     def __unicode__(self):
         return self.__str__()
 
+STATUS_CHOICES = (('ACTIVE', 'active'),
+                    ('SUPERSEDED', 'superseded by amendment'),
+                    ('COVERED', 'covered by periodic'),
+                    ('MEMO', 'memo'))
+
 class Committee(BaseModel):
     fec_id = models.CharField(max_length=10, primary_key=True)
     committee_name = models.CharField(max_length=255, blank=True, null=True)
@@ -29,6 +34,7 @@ class Committee(BaseModel):
     committee_designation = models.CharField(max_length=1, blank=True, null=True)
 
 class Filing(BaseModel):
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
     filing_id = models.IntegerField(primary_key=True)
     form_type = models.CharField(max_length=20, null=True, blank=True, help_text='the full form type from the filing')
     form = models.CharField(max_length=20, null=True, blank=True, help_text='the base form type (excluding amendment indications)')
@@ -39,6 +45,7 @@ class Filing(BaseModel):
     coverage_from_date = models.CharField(max_length=10, null=True, blank=True)
     coverage_through_date = models.CharField(max_length=10, null=True, blank=True)
     date_signed = models.CharField(max_length=10, null=True, blank=True)
+    amends_filing = models.IntegerField(null=True, help_text='the filing id of the filing this filing amends')
     cash_on_hand_close_of_period = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     cash_on_hand_beginning_period = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     debts_by_summary = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True,help_text="Current debt owed by the committee")
@@ -175,7 +182,8 @@ class Filing(BaseModel):
     cycle_transfers_to_affiliated = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     cycle_transfers_to_other_authorized_committees = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
 
-class ScheduleA(BaseModel):
+class Transaction(BaseModel):
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
     form_type = models.CharField(max_length=255, null=True, blank=True)
     filer_committee_id_number = models.CharField(max_length=255, null=True, blank=True)
     filing_id = models.IntegerField(null=True, blank=True)
@@ -183,6 +191,18 @@ class ScheduleA(BaseModel):
     back_reference_tran_id_number = models.CharField(max_length=255, null=True, blank=True)
     back_reference_sched_name = models.CharField(max_length=255, null=True, blank=True)
     entity_type = models.CharField(max_length=255, null=True, blank=True)
+    filer_id = models.CharField(max_length=9, null=True, blank=True)
+    
+    @property
+    def filing(self):
+        try:
+            return Filing.objects.get(filing_id=self.filing_id)
+        except:
+            return None
+    class Meta:
+        abstract = True
+
+class ScheduleA(Transaction):
     contributor_organization_name = models.CharField(max_length=255, null=True, blank=True)
     contributor_last_name = models.CharField(max_length=255, null=True, blank=True)
     contributor_first_name = models.CharField(max_length=255, null=True, blank=True)
@@ -223,14 +243,7 @@ class ScheduleA(BaseModel):
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
     reference_code = models.CharField(max_length=255, null=True, blank=True)
 
-class ScheduleB(BaseModel):
-    form_type = models.CharField(max_length=255, null=True, blank=True)
-    filer_committee_id_number = models.CharField(max_length=255, null=True, blank=True)
-    filing_id = models.IntegerField(null=True, blank=True)
-    transaction_id = models.CharField(max_length=255, null=True, blank=True)
-    back_reference_tran_id_number = models.CharField(max_length=255, null=True, blank=True)
-    back_reference_sched_name = models.CharField(max_length=255, null=True, blank=True)
-    entity_type = models.CharField(max_length=255, null=True, blank=True)
+class ScheduleB(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)
     payee_last_name = models.CharField(max_length=255, null=True, blank=True)
     payee_first_name = models.CharField(max_length=255, null=True, blank=True)
@@ -270,14 +283,7 @@ class ScheduleB(BaseModel):
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
     reference_to_si_or_sl_system_code_that_identifies_the_account = models.CharField(max_length=255, null=True, blank=True)
 
-class ScheduleE(BaseModel):
-    form_type = models.CharField(max_length=255, null=True, blank=True)
-    filer_committee_id_number = models.CharField(max_length=255, null=True, blank=True)
-    filing_id = models.IntegerField(null=True, blank=True)
-    transaction_id = models.CharField(max_length=255, null=True, blank=True)
-    back_reference_tran_id_number = models.CharField(max_length=255, null=True, blank=True)
-    back_reference_sched_name = models.CharField(max_length=255, null=True, blank=True)
-    entity_type = models.CharField(max_length=255, null=True, blank=True)
+class ScheduleE(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)
     payee_last_name = models.CharField(max_length=255, null=True, blank=True)
     payee_first_name = models.CharField(max_length=255, null=True, blank=True)
