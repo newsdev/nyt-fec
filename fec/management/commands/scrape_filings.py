@@ -58,34 +58,19 @@ class Command(BaseCommand):
             filings = loader.get_filing_list(log, start_date, end_date)
             assert filings, "Failed to find any filings in FEC API"
             
-            good_filings = []
-            for filing in filings:
-                #download filings
-                filename = 'filings/{}.csv'.format(filing)
-                if filename not in os.listdir('filings'):
-                    file_url = 'http://docquery.fec.gov/csv/{}/{}.csv'.format(str(filing)[-3:],filing)
-                    if os.path.isfile(filename):
-                        log.write("we already have filing {} downloaded\n".format(filing))
-                    else:
-                        os.system('curl -o {} {}'.format(filename, file_url))
-                with open(filename, "r") as filing_csv:
-                    #pop each filing open, check the filing type, and add to queue if we want this one
-                    reader = csv.reader(filing_csv)
-                    try:
-                        next(reader)
-                    except:
-                        log.write("filing {} has no lines.\n".format(filing))
-                        continue
-                    form_line = next(reader)
-                    if form_line[0].replace('A','').replace('N','') in ['F3','F3X','F3P','F24']:
-                        if form_line[1] not in ['C00401224']: #bad filings we don't want to load (actblue!)
-                            good_filings.append(filing)
+
 
             filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
+
+            filing_dir = 'filings/'
+            good_filings = loader.download_filings(log, filings, filing_dir)
+
             for filing in good_filings:
                 #this is the load loop
                 log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
-                filename = 'filings/{}.csv'.format(filing)
+                
+                filename = "{}{}.csv".format(filing_dir, filing)
+
                 try:
                     filing_dict = process_filing.process_electronic_filing(filename)
                 except Exception as e:

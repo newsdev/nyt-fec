@@ -47,3 +47,38 @@ def get_filing_list(log, start_date, end_date, max_fails=5):
             filings.append(f['file_number'])
 
     return filings
+
+
+def evaluate_filing(log, filename):
+    with open(filename, "r") as filing_csv:
+        #pop each filing open, check the filing type, and add to queue if we want this one
+        reader = csv.reader(filing_csv)
+        try:
+            next(reader)
+        except:
+            log.write("filing {} has no lines.\n".format(filing))
+            return False
+        form_line = next(reader)
+        if form_line[0].replace('A','').replace('N','') in ['F3','F3X','F3P','F24']:
+            if form_line[1] not in ['C00401224']: #bad filings we don't want to load (actblue!)
+                return True
+        return False
+
+def download_filings(log, filings, filing_dir="filings/"):
+    #takes a list of filing ids, downloads the files, filters them to decide
+    #if we want to load the filing, and returns the list of filings we want to load
+    good_filings = []
+    existing_filings = os.listdir('filings')
+    for filing in filings:
+        #download filings
+        filename = '{}{}.csv'.format(filing_dir, filing)
+        if filename not in existing_filings:
+            file_url = 'http://docquery.fec.gov/csv/{}/{}.csv'.format(str(filing)[-3:],filing)
+            if os.path.isfile(filename):
+                log.write("we already have filing {} downloaded\n".format(filing))
+            else:
+                os.system('curl -o {} {}'.format(filename, file_url))
+
+        if evaluate_filing(log, filename):
+            good_filings.append(filing)
+    return good_filings
