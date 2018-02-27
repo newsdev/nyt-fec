@@ -57,25 +57,13 @@ class Command(BaseCommand):
             #keep looping if an interval is provided, this is mostly for testing
             filings = loader.get_filing_list(log, start_date, end_date)
             assert filings, "Failed to find any filings in FEC API"
-            
-
-
-            filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
 
             filing_dir = 'filings/'
-            good_filings = loader.download_filings(log, filings, filing_dir)
+            loader.download_filings(log, filings, filing_dir)
+            good_filings = loader.evaluate_filings(log, filings, filing_dir)
 
-            for filing in good_filings:
-                #this is the load loop
-                log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
-                
-                filename = "{}{}.csv".format(filing_dir, filing)
 
-                loader.load_filing(log, filing, filename)
-            #except:
-            #    log.write(traceback.format_exc())
-            #    log.write("{}: Run failed.\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-
+            loader.load_filings(log, good_filings, filing_dir)
 
             if logfile:
                 log.close()

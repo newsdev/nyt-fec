@@ -65,10 +65,8 @@ def evaluate_filing(log, filename):
         return False
 
 def download_filings(log, filings, filing_dir="filings/"):
-    #takes a list of filing ids, downloads the files, filters them to decide
-    #if we want to load the filing, and returns the list of filings we want to load
-    good_filings = []
-    existing_filings = os.listdir('filings')
+    #takes a list of filing ids, downloads the files
+    existing_filings = os.listdir(filing_dir)
     for filing in filings:
         #download filings
         filename = '{}{}.csv'.format(filing_dir, filing)
@@ -79,8 +77,24 @@ def download_filings(log, filings, filing_dir="filings/"):
             else:
                 os.system('curl -o {} {}'.format(filename, file_url))
 
-        if evaluate_filing(log, filename):
-            good_filings.append(filing)
+def evaluate_filings(log, filings, filing_dir="filings/"):
+    #filings is a list of ids, filing_dir is the directory where filings are saved.
+    #here we loop through the filings to see if they're valid.
+    good_filings = []
+    existing_filings = {}
+    for f in os.listdir(filing_dir):
+        try:
+            existing_filings[int(f.split(".")[0])] = "{}{}".format(filing_dir, f)
+        except:
+            #skip filenames that don't conform to the filename pattern
+            pass
+    for filing in filings:
+        if filing in existing_filings:
+            if evaluate_filing(log, existing_filings[filing]):
+                good_filings.append(filing)
+        else:
+            print(type(filing))
+            log.write('Filing {} not found\n'.format(filing))
     return good_filings
 
 
@@ -94,21 +108,22 @@ def load_itemizations(sked_model, skeds, debug=False):
     else:
         chunk_size = 5000
         chunk = []
-        for line in filing_dict:
+        for line in skeds:
             sked_count += 1
             chunk.append(sked_model(**line))
             if len(chunk) >= chunk_size:
-                sked_model.bulk_create(chunk)
+                sked_model.objects.bulk_create(chunk)
                 chunk = []
-        sked_model.bulk_creat(chunk)
+        sked_model.objects.bulk_create(chunk)
     return sked_count
 
-def load_filing(log, filing, filename):
+def load_filing(log, filing, filename, filing_fieldnames):
+    #returns boolean depending on whether filing was loaded
     try:
         filing_dict = process_filing.process_electronic_filing(filename)
     except Exception as e:
         log.write("fec2json failed {} {}\n".format(filing, e))
-        continue
+        return False
     try:
         #this means the filing already exists
         #TODO add checking to see if import was successful
@@ -181,11 +196,24 @@ def load_filing(log, filing, filename):
         log.write("inserted {} schedule B's\n".format(schb_count))
         log.write("inserted {} schedule E's\n".format(sche_count))
 
+        return True
 
     else:
         log.write('filing {} already exists\n'.format(filing))
-        continue
-    log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
+        return False
+
+    
 
 
+def load_filings(log, good_filings, filing_dir):
+    filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
 
+    for filing in good_filings:
+                
+        log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
+        
+        filename = "{}{}.csv".format(filing_dir, filing)
+
+        if load_filing(log, filing, filename, filing_fieldnames):
+
+            log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
