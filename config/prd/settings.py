@@ -8,8 +8,8 @@ WSGI_APPLICATION = 'config.prd.app.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DB_NAME', None),
-        'USER': os.environ.get('DB_USER', None),
+        'NAME': os.environ.get('DB_NAME', 'fec_prd'),
+        'USER': os.environ.get('DB_USER', 'fec_prd'),
         'PASSWORD': os.environ.get('DB_PASSWORD', None),
         'HOST': os.environ.get('DB_HOST', None),
     }
