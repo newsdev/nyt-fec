@@ -33,6 +33,15 @@ class Committee(BaseModel):
     committee_type = models.CharField(max_length=1, blank=True, null=True)
     committee_designation = models.CharField(max_length=1, blank=True, null=True)
 
+    def __str__(self):
+        return self.committee_name if self.committee_name else self.fec_id
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['fec_id']),
+            models.Index(fields=['committee_name']),
+        ]
+
 class Filing(BaseModel):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
     filing_id = models.IntegerField(primary_key=True)
@@ -182,6 +191,19 @@ class Filing(BaseModel):
     cycle_transfers_to_affiliated = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     cycle_transfers_to_other_authorized_committees = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
 
+    def __str__(self):
+        if self.committee_name:
+            return "{} filing {}".format(self.committee_name, self.filing_id)
+        else:
+            return str(self.filing_id)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['filer_id']),
+            models.Index(fields=['filing_id']),
+            models.Index(fields=['committee_name']),
+        ]
+
 class Transaction(BaseModel):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
     form_type = models.CharField(max_length=255, null=True, blank=True)
@@ -201,6 +223,11 @@ class Transaction(BaseModel):
             return None
     class Meta:
         abstract = True
+        indexes = [
+            models.Index(fields=['filing_id']),
+            models.Index(fields=['filer_id']),
+        ]
+
 
 class ScheduleA(Transaction):
     contributor_organization_name = models.CharField(max_length=255, null=True, blank=True)
@@ -242,6 +269,9 @@ class ScheduleA(Transaction):
     memo_code = models.CharField(max_length=255, null=True, blank=True)
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
     reference_code = models.CharField(max_length=255, null=True, blank=True)
+
+    #we're going to need some indexes in here to do text search
+
 
 class ScheduleB(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)
