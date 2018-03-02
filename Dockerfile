@@ -16,4 +16,4 @@ ENV PYTHONPATH=/usr/src/app
 
 
 EXPOSE 80
-CMD ["/usr/local/bin/uwsgi", "--ini", "/usr/src/app/config/prd/app.ini"]
+CMD ["/usr/local/bin/uwsgi", "--ini", "/usr/src/app/config/prd/docker.ini"]
