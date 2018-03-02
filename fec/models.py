@@ -15,7 +15,9 @@ class BaseModel(models.Model):
 STATUS_CHOICES = (('ACTIVE', 'active'),
                     ('SUPERSEDED', 'superseded by amendment'),
                     ('COVERED', 'covered by periodic'),
-                    ('MEMO', 'memo'))
+                    ('MEMO', 'memo'),
+                    ('PROCESSING','processing'),
+                    ('FAILED','failed'))
 
 class Committee(BaseModel):
     fec_id = models.CharField(max_length=10, primary_key=True)
@@ -43,7 +45,7 @@ class Committee(BaseModel):
         ]
 
 class Filing(BaseModel):
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PROCESSING')
     filing_id = models.IntegerField(primary_key=True)
     form_type = models.CharField(max_length=20, null=True, blank=True, help_text='the full form type from the filing')
     form = models.CharField(max_length=20, null=True, blank=True, help_text='the base form type (excluding amendment indications)')

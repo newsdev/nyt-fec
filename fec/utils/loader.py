@@ -119,55 +119,70 @@ def load_itemizations(sked_model, skeds, debug=False):
 
 def load_filing(log, filing, filename, filing_fieldnames):
     #returns boolean depending on whether filing was loaded
+    
+    
+    #this means the filing already exists
+    #TODO add checking to see if import was successful
+    filing_matches = Filing.objects.filter(filing_id=filing)
+    if len(filing_matches) == 1:
+        if filing_matches[0].status != "FAILED":
+            log.write('filing {} already exists\n'.format(filing))
+            return False
+        else:
+            log.write("Reloading {}, it failed perviously\n".format(filing))
+    #filing does not exist or it failed previously
     try:
         filing_dict = process_filing.process_electronic_filing(filename)
     except Exception as e:
         log.write("fec2json failed {} {}\n".format(filing, e))
         return False
-    try:
-        #this means the filing already exists
-        #TODO add checking to see if import was successful
-        f = Filing.objects.get(filing_id=filing)
-    except:
-        #deal with amended filings
-        if filing_dict['amendment']:
-            amends_filing = int(filing_dict['amends_filing'])
-            try:
-                amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
-            except IndexError:
-                log.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
-            else:
-                amended_filing.active = False
-                amended_filing.status = 'SUPERSEDED'
-                amended_filing.save()
-                ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-                ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-                ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
 
-        if filing_dict['form_type'] in ['F3','F3X','F3P']:
-            #could be a periodic, so see if there are covered forms that need to be deactivated
-            coverage_start_date = filing_dict['coverage_start_date']
-            coverage_end_date = filing_dict['coverage_end_date']
-            covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
-                                                    date_signed__lte=coverage_end_date,
-                                                    form='F24')
-            covered_filings.update(active=False, status='COVERED')
-            covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
-            covered_transactions.update(active=False, status='COVERED')
-
-        clean_filing_dict = {k: filing_dict[k] for k in set(filing_fieldnames).intersection(filing_dict.keys())}
-        clean_filing_dict['filing_id'] = filing
-        clean_filing_dict['filer_id'] = filing_dict['filer_committee_id_number']
-        filing_obj = Filing.objects.create(**clean_filing_dict)
-        filing_obj.save()
-
-        #create or update committee
+    #deal with amended filings
+    if filing_dict['amendment']:
+        amends_filing = int(filing_dict['amends_filing'])
         try:
-            comm = Committee.objects.create(fec_id=filing_dict['filer_committee_id_number'])
-            comm.save()
-        except:
-            pass
+            amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
+        except IndexError:
+            log.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
+        else:
+            amended_filing.active = False
+            amended_filing.status = 'SUPERSEDED'
+            amended_filing.save()
+            ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+            ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+            ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
 
+    if filing_dict['form_type'] in ['F3','F3X','F3P']:
+        #could be a periodic, so see if there are covered forms that need to be deactivated
+        coverage_start_date = filing_dict['coverage_start_date']
+        coverage_end_date = filing_dict['coverage_end_date']
+        covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
+                                                date_signed__lte=coverage_end_date,
+                                                form='F24')
+        covered_filings.update(active=False, status='COVERED')
+        covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
+        covered_transactions.update(active=False, status='COVERED')
+
+    clean_filing_dict = {k: filing_dict[k] for k in set(filing_fieldnames).intersection(filing_dict.keys())}
+    clean_filing_dict['filing_id'] = filing
+    clean_filing_dict['filer_id'] = filing_dict['filer_committee_id_number']
+    
+    if len(filing_matches) == 1:
+        filing_matches.update(**clean_filing_dict)
+        filing_obj = filing_matches[0]
+    else:
+        filing_obj = Filing.objects.create(**clean_filing_dict)
+    filing_obj.save()
+
+    #create or update committee
+    try:
+        comm = Committee.objects.create(fec_id=filing_dict['filer_committee_id_number'])
+        comm.save()
+    except:
+        #committee already exists
+        pass
+
+    try:
         committee_fieldnames = [f.name for f in Committee._meta.get_fields()]
         committee = {}
         committee['zipcode'] = filing_dict['zip']
@@ -179,9 +194,12 @@ def load_filing(log, filing, filename, filing_fieldnames):
             committee[fn] = field
 
         comm = Committee.objects.filter(fec_id=filing_dict['filer_committee_id_number']).update(**committee)
+    except:
+        log.write('failed to update committee\n')
 
-        #add itemizations - eventually we're going to need to bulk insert here
-        #skedA's
+    #add itemizations - eventually we're going to need to bulk insert here
+    #skedA's
+    try:
         scha_count = 0
         schb_count = 0
         sche_count = 0
@@ -195,12 +213,24 @@ def load_filing(log, filing, filename, filing_fieldnames):
         log.write("inserted {} schedule A's\n".format(scha_count))
         log.write("inserted {} schedule B's\n".format(schb_count))
         log.write("inserted {} schedule E's\n".format(sche_count))
-
-        return True
-
-    else:
-        log.write('filing {} already exists\n'.format(filing))
+    except:
+        #something failed in the transaction loading, keep the filing as failed
+        #but remove the itemizations
+        filing_obj.status='FAILED'
+        filing_obj.save()
+        ScheduleA.objects.filter(filing_id=filing).delete()
+        ScheduleB.objects.filter(filing_id=filing).delete()
+        ScheduleE.objects.filter(filing_id=filing).delete()
+        log.write('Something failed in itemizations, marking {} as FAILED\n'.format(filing_id))
         return False
+
+    log.write('Marking {} as ACTIVE\n'.format(filing))
+    filing_obj.status='ACTIVE'
+    filing_obj.save()
+    return True
+
+
+        
 
     
 
@@ -213,6 +243,7 @@ def load_filings(log, good_filings, filing_dir):
         log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
         
         filename = "{}{}.csv".format(filing_dir, filing)
+
 
         if load_filing(log, filing, filename, filing_fieldnames):
 
