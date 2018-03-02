@@ -28,6 +28,9 @@ class Command(BaseCommand):
         parser.add_argument('--logfile',
             dest='logfile',
             help='File to log to, otherwise just log to console')
+        parser.add_argument('--filing_dir',
+            dest='filing_dir',
+            help='where to save and read filings from')
     #default is to do just today and just committees we have in the DB
 
     def handle(self, *args, **options):
@@ -52,13 +55,16 @@ class Command(BaseCommand):
         else:
             logfile = None
             log = sys.stdout
+        if options['filing_dir']:
+            filing_dir = options['filing_dir']
+        else:
+            filing_dir = 'filings/'
 
         while True:
             #keep looping if an interval is provided, this is mostly for testing
             filings = loader.get_filing_list(log, start_date, end_date)
             assert filings, "Failed to find any filings in FEC API"
 
-            filing_dir = 'filings/'
             loader.download_filings(log, filings, filing_dir)
             good_filings = loader.evaluate_filings(log, filings, filing_dir)
 
