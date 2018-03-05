@@ -20,7 +20,7 @@
         <td> {{filing.committee_name}} </td>
         <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
         <td> {{filing.created}} </td>
-        <td> ${{filing.period_total_receipts|floatformat:0|intcomma}} </td>
+        <td> ${{filing.period_total_receipts}} </td>
         <td> ${{filing.period_total_disbursements|floatformat:0|intcomma}} </td>
         <td> ${{filing.cash_on_hand_close_of_period|floatformat:0|intcomma}} </td>
         <td> ${{filing.period_independent_expenditures|floatformat:0|intcomma}} </td>

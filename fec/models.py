@@ -227,6 +227,21 @@ class Transaction(BaseModel):
             return Filing.objects.get(filing_id=self.filing_id)
         except:
             return None
+
+    @property
+    def committee(self):
+        try:
+            return Committee.objects.get(fec_id=self.filer_committee_id_number)
+        except:
+            return None
+
+    @property
+    def committee_name(self):
+        try:
+            return self.committee.committee_name
+        except:
+            return None
+
     class Meta:
         abstract = True
         indexes = [
@@ -276,6 +291,13 @@ class ScheduleA(Transaction):
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
     reference_code = models.CharField(max_length=255, null=True, blank=True)
 
+    @property
+    def contributor_name(self):
+        if self.contributor_organization_name:
+            return self.contributor_organization_name
+        if self.contributor_middle_name:
+            return ' '.join([self.contributor_first_name, self.contributor_middle_name, self.contributor_last_name])
+        return ' '.join([self.contributor_first_name, self.contributor_last_name])
     #we're going to need some indexes in here to do text search
 
 

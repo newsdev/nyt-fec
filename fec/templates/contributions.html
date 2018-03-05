@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+<h2> Search for contributions </h2>
+
+<form action="/contributions/" method="get">
+    {{ form }}
+    <input type="submit" value="Submit" />
+</form>
+
+
+{% if results %}
+  <table class="table">
+    <tr>
+        <th> Committee </th>
+        <th> Contributor name </th>
+        <th> Contribution amount </th>
+        <th> Contribution date </th>
+    </tr>
+    {% for result in results %}
+    <tr>
+        <td>{{result.committee_name}}</td>
+        <td>{{result.contributor_name}}</td>
+        <td>{{result.contributor_amount|floatformat:0|intcomma}}</td>
+        <td>{{result.contribution_date}}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+
+{% endblock %}
