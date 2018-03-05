@@ -1,7 +1,32 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
 
 {% block content %}
 
-CAMPFIN app coming here soon
+<h2> Newest Filings </h2>
+<table class="table">
+    <tr>
+        <th> Committee </th>
+        <th> Filing Type </th>
+        <th> Import time </th>
+        <th> Receipts </th>
+        <th> Disbursements </th>
+        <th> Cash </th>
+        <th> IEs </th>
+    </tr>
+    {% for filing in new_filings %}
+    <tr>
+        <td> {{filing.committee_name}} </td>
+        <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
+        <td> {{filing.created}} </td>
+        <td> ${{filing.period_total_receipts|floatformat:0|intcomma}} </td>
+        <td> ${{filing.period_total_disbursements|floatformat:0|intcomma}} </td>
+        <td> ${{filing.cash_on_hand_close_of_period|floatformat:0|intcomma}} </td>
+        <td> ${{filing.period_independent_expenditures|floatformat:0|intcomma}} </td>
+    </tr>
+    {% endfor %}
+</table>
+        
 
 {% endblock %}

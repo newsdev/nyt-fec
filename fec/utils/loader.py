@@ -117,6 +117,29 @@ def load_itemizations(sked_model, skeds, debug=False):
         sked_model.objects.bulk_create(chunk)
     return sked_count
 
+def clean_filing_fields(log, processed_filing, filing_fieldnames):
+    ##should this all be moved to fec2json?
+    clean_filing = {}
+    for k, v in processed_filing.items():
+        key = k
+        if k == 'col_a_cash_on_hand_beginning_period':
+            key = 'cash_on_hand_beginning_period'
+        elif k == 'col_a_cash_on_hand_close_of_period':
+            key = 'cash_on_hand_close_of_period'
+        elif k == 'col_a_debts_by_summary':
+            key = 'debts_by_summary'
+        elif k.startswith("col_a_"):
+            key = "period_{}".format(k.replace('col_a_',''))
+            
+        elif k.startswith("col_b_"):
+            key = "cycle_{}".format(k.replace('col_b_',''))
+
+        if key in filing_fieldnames:
+            clean_filing[key] = v
+        else:
+            log.write('dropping key {}\n'.format(k))
+    return clean_filing
+
 def load_filing(log, filing, filename, filing_fieldnames):
     #returns boolean depending on whether filing was loaded
     
@@ -163,7 +186,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
         covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
         covered_transactions.update(active=False, status='COVERED')
 
-    clean_filing_dict = {k: filing_dict[k] for k in set(filing_fieldnames).intersection(filing_dict.keys())}
+    clean_filing_dict = clean_filing_fields(log,filing_dict, filing_fieldnames)
     clean_filing_dict['filing_id'] = filing
     clean_filing_dict['filer_id'] = filing_dict['filer_committee_id_number']
     

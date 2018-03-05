@@ -193,6 +193,10 @@ class Filing(BaseModel):
     cycle_transfers_to_affiliated = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     cycle_transfers_to_other_authorized_committees = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
 
+    @property
+    def url(self):
+        return "http://docquery.fec.gov/cgi-bin/forms/{}/{}/".format(self.filer_id, self.filing_id)
+
     def __str__(self):
         if self.committee_name:
             return "{} filing {}".format(self.committee_name, self.filing_id)
