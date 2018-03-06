@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+import datetime
+
 class BaseModel(models.Model):
     active = models.BooleanField(default=True)
     created = models.DateTimeField(default=timezone.now)
@@ -300,6 +302,20 @@ class ScheduleA(Transaction):
         return ' '.join([self.contributor_first_name, self.contributor_last_name])
     #we're going to need some indexes in here to do text search
 
+    @property
+    def contribution_date_formatted(self):
+        try:
+            return datetime.datetime.strptime(self.contribution_date, '%Y%m%d')
+        except:
+            return
+
+    @property
+    def address(self):
+        try:
+            address_parts = [self.contributor_street_1, self.contributor_street_2, self.contributor_city+", "+self.contributor_state, self.contributor_zip[0:5]]
+            return ' '.join([a for a in address_parts if a])
+        except:
+            return
 
 class ScheduleB(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)

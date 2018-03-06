@@ -49,7 +49,7 @@ def get_filing_list(log, start_date, end_date, max_fails=5):
     return filings
 
 
-def evaluate_filing(log, filename):
+def evaluate_filing(log, filename, filing):
     with open(filename, "r") as filing_csv:
         #pop each filing open, check the filing type, and add to queue if we want this one
         reader = csv.reader(filing_csv)
@@ -90,10 +90,9 @@ def evaluate_filings(log, filings, filing_dir="filings/"):
             pass
     for filing in filings:
         if filing in existing_filings:
-            if evaluate_filing(log, existing_filings[filing]):
+            if evaluate_filing(log, existing_filings[filing], filing):
                 good_filings.append(filing)
         else:
-            print(type(filing))
             log.write('Filing {} not found\n'.format(filing))
     return good_filings
 
@@ -103,6 +102,8 @@ def load_itemizations(sked_model, skeds, debug=False):
     sked_count = 0
     if debug:
         for line in skeds:
+            if line['memo_code'] == 'X':
+                line['status'] = 'MEMO'
             sked_model.objects.create(**line)
             sked_count += 1
     else:
@@ -110,6 +111,8 @@ def load_itemizations(sked_model, skeds, debug=False):
         chunk = []
         for line in skeds:
             sked_count += 1
+            if line['memo_code'] == 'X':
+                line['status'] = 'MEMO'
             chunk.append(sked_model(**line))
             if len(chunk) >= chunk_size:
                 sked_model.objects.bulk_create(chunk)
@@ -137,7 +140,8 @@ def clean_filing_fields(log, processed_filing, filing_fieldnames):
         if key in filing_fieldnames:
             clean_filing[key] = v
         else:
-            log.write('dropping key {}\n'.format(k))
+            pass
+            #log.write('dropping key {}\n'.format(k))
     return clean_filing
 
 def load_filing(log, filing, filename, filing_fieldnames):
