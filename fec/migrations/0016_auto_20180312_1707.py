@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             ON fec_committee
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(
-              name_search, 'pg_catalog.english', fec_id, committee_name);
+              name_search, 'pg_catalog.english_stem', fec_id, committee_name);
 
             UPDATE fec_committee SET name_search = NULL;
             ''',

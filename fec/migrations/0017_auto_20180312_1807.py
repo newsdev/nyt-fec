@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
             ON fec_scheduleb
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(
-              name_search, 'pg_catalog.english', payee_organization_name, payee_first_name, payee_middle_name, payee_last_name);
+              name_search, 'pg_catalog.english_stem', payee_organization_name, payee_first_name, payee_middle_name, payee_last_name);
 
             UPDATE fec_scheduleb SET name_search = NULL;
             ''',
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
             ON fec_scheduleb
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(
-              purpose_search, 'pg_catalog.english', expenditure_purpose_descrip);
+              purpose_search, 'pg_catalog.english_stem', expenditure_purpose_descrip);
 
             UPDATE fec_scheduleb SET purpose_search = NULL;
             ''',
