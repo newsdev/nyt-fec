@@ -257,11 +257,6 @@ def load_filing(log, filing, filename, filing_fieldnames):
     return True
 
 
-        
-
-    
-
-
 def load_filings(log, good_filings, filing_dir):
     filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
 

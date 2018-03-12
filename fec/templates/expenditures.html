@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+<h2> Search for expenditures </h2>
+<div class="row">
+<form action="/expenditures/" method="get">
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+</div>
+
+
+<div class="row">
+{% if results %}
+<div class="page-header row">
+  <div class="header-title">
+    {% if results_sum %}
+    <h2> Expenditures total: ${{results_sum.expenditure_amount__sum|floatformat:2|intcomma}} </h2>
+    This total includes only itemized expenditures.
+    {% endif %} 
+
+    </div>
+</div>
+  <table class="table table-bordered table-striped">
+    <tr>
+        <th> Committee </th>
+        <th> Recipient name </th>
+        <th> Address </th>
+        <th> Purpose </th>
+        <th> Amount </th>
+        <th> Date </th>
+    </tr>
+    {% for result in results %}
+    <tr>
+        <td>{{result.committee_name}}</td>
+        <td>{{result.payee_name}}</td>
+        <td>{{result.address}}</td>
+        <td>{{result.expenditure_purpose_descrip}}</td>
+        <td>${{result.expenditure_amount|floatformat:2|intcomma}}</td>
+        <td>{{result.expenditure_date_formatted|date:"SHORT_DATE_FORMAT"}}</td>
+    </tr>
+  {% endfor %}
+</table>
+</div>
+<div class="pagination">
+    <span class="step-links">
+        {% if results.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ results.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ results.number }} of {{ results.paginator.num_pages }}.
+        </span>
+
+        {% if results.has_next %}
+            <a href="?page={{ results.next_page_number }}">next</a> |
+            <a href="?page={{ results.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endif %}
+
+
+{% endblock %}

@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchVector
+from django.contrib.postgres.indexes import GinIndex
 
 import datetime
 
@@ -36,6 +38,7 @@ class Committee(BaseModel):
     treasurer_suffix = models.CharField(max_length=255, blank=True, null=True)
     committee_type = models.CharField(max_length=1, blank=True, null=True)
     committee_designation = models.CharField(max_length=1, blank=True, null=True)
+    name_search = SearchVectorField(null=True)
 
     def __str__(self):
         return self.committee_name if self.committee_name else self.fec_id
@@ -44,7 +47,14 @@ class Committee(BaseModel):
         indexes = [
             models.Index(fields=['fec_id']),
             models.Index(fields=['committee_name']),
+            GinIndex(fields=['name_search']),
         ]
+
+    def find_committee_by_name(search_term):
+        #does full text search on committee name and returns matching committees
+        query = SearchQuery(search_term)
+        return Committee.objects.filter(name_search=query)
+
 
 class Filing(BaseModel):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PROCESSING')
@@ -222,7 +232,7 @@ class Transaction(BaseModel):
     back_reference_sched_name = models.CharField(max_length=255, null=True, blank=True)
     entity_type = models.CharField(max_length=255, null=True, blank=True)
     filer_id = models.CharField(max_length=9, null=True, blank=True)
-    
+
     @property
     def filing(self):
         try:
@@ -248,7 +258,7 @@ class Transaction(BaseModel):
         abstract = True
         indexes = [
             models.Index(fields=['filing_id']),
-            models.Index(fields=['filer_id']),
+            models.Index(fields=['filer_committee_id_number']),
         ]
 
 
@@ -292,6 +302,14 @@ class ScheduleA(Transaction):
     memo_code = models.CharField(max_length=255, null=True, blank=True)
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
     reference_code = models.CharField(max_length=255, null=True, blank=True)
+    name_search = SearchVectorField(null=True)
+    occupation_search = SearchVectorField(null=True)
+    
+    """
+    these search fields require triggers. Please see migration 0015 which I hand-edited
+    to insert these triggers. this might make inserts hopelessly slow, we shall see.
+    """
+
 
     @property
     def contributor_name(self):
@@ -300,7 +318,6 @@ class ScheduleA(Transaction):
         if self.contributor_middle_name:
             return ' '.join([self.contributor_first_name, self.contributor_middle_name, self.contributor_last_name])
         return ' '.join([self.contributor_first_name, self.contributor_last_name])
-    #we're going to need some indexes in here to do text search
 
     @property
     def contribution_date_formatted(self):
@@ -316,6 +333,10 @@ class ScheduleA(Transaction):
             return ' '.join([a for a in address_parts if a])
         except:
             return
+
+    class Meta(Transaction.Meta):
+        indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
+        indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['occupation_search'])])
 
 class ScheduleB(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)
@@ -356,6 +377,36 @@ class ScheduleB(Transaction):
     memo_code = models.CharField(max_length=255, null=True, blank=True)
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
     reference_to_si_or_sl_system_code_that_identifies_the_account = models.CharField(max_length=255, null=True, blank=True)
+    name_search = SearchVectorField(null=True)
+    purpose_search = SearchVectorField(null=True)
+
+    @property
+    def payee_name(self):
+        if self.payee_organization_name:
+            return self.payee_organization_name
+        if self.payee_middle_name:
+            return ' '.join([self.payee_first_name, self.payee_middle_name, self.payee_last_name])
+        return ' '.join([self.payee_first_name, self.payee_last_name])
+
+    @property
+    def expenditure_date_formatted(self):
+        try:
+            return datetime.datetime.strptime(self.expenditure_date, '%Y%m%d')
+        except:
+            return
+
+    @property
+    def address(self):
+        try:
+            address_parts = [self.payee_street_1, self.payee_street_2, self.payee_city+", "+self.payee_state, self.payee_zip[0:5]]
+            return ' '.join([a for a in address_parts if a])
+        except:
+            return
+
+    class Meta(Transaction.Meta):
+        indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
+        indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['purpose_search'])])
+
 
 class ScheduleE(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)

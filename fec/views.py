@@ -32,19 +32,15 @@ def contributions(request):
         results = results.filter(filing_id=filing_id)
     if employer:
         query = SearchQuery(employer)
-        vector = SearchVector('contributor_employer', 'contributor_occupation')
-        results = results.annotate(search=vector).filter(search=query)
+        results = results.filter(occupation_search=query)
     if donor:
         query = SearchQuery(donor)
-        vector = SearchVector('contributor_first_name', 'contributor_middle_name', 'contributor_last_name', 'contributor_organization_name')
-        results = results.annotate(search=vector).filter(search=query)
+        results = results.filter(name_search=query)
 
     if comm:
-        if re.match('C\d\d\d\d\d\d\d\d', comm):
-            #it's a committee id, search that field:
-            results = results.filter(filer_id=comm)
-        #TODO: deal with committee name search
-
+        matching_committees = Committee.find_committee_by_name(comm)
+        comm_ids = [c.fec_id for c in matching_committees]
+        results = results.filter(filer_committee_id_number__in=comm_ids)
 
     order_by = request.GET.get('order_by', 'contribution_amount')
     order_direction = request.GET.get('order_direction', 'DESC')
@@ -65,4 +61,47 @@ def contributions(request):
 
 
 
+def expenditures(request):
+    form = ExpenditureForm(request.GET)
+    if not request.GET:
+        return render(request, 'expenditures.html', {'form': form})
+
+    comm = request.GET.get('committee')
+    filing_id = request.GET.get('filing_id')
+    recipient = request.GET.get('recipient')
+    purpose = request.GET.get('purpose')
+    include_memo = request.GET.get('include_memo')
+
+    results = ScheduleB.objects.filter(active=True)
+    if not include_memo:
+        results = results.exclude(status='MEMO')
+    if filing_id:
+        results = results.filter(filing_id=filing_id)
+    if purpose:
+        query = SearchQuery(purpose)
+        results = results.filter(purpose_search=query)
+    if recipient:
+        query = SearchQuery(recipient)
+        results = results.filter(name_search=recipient)
+
+    if comm:
+        matching_committees = Committee.find_committee_by_name(comm)
+        comm_ids = [c.fec_id for c in matching_committees]
+        results = results.filter(filer_committee_id_number__in=comm_ids)
+
+    order_by = request.GET.get('order_by', 'expenditure_amount')
+    order_direction = request.GET.get('order_direction', 'DESC')
+    if order_direction == "DESC":
+        results = results.order_by('-{}'.format(order_by))
+    else:
+        results = results.order_by(order_by)
+
+
+    results_sum = None if include_memo else results.aggregate(Sum('expenditure_amount'))
+
+    paginator = Paginator(results, 50)
+    page = request.GET.get('page')
+    results = paginator.get_page(page)
+
     
+    return render(request, 'expenditures.html', {'form': form, 'results':results, 'results_sum':results_sum})

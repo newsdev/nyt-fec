@@ -21,7 +21,7 @@
         <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
         <td> {{filing.created}} </td>
         <td> <a href="{%url 'contributions'%}?filing_id={{filing.filing_id}}">${{filing.period_total_receipts|floatformat:2|intcomma}}</a> </td>
-        <td> ${{filing.period_total_disbursements|floatformat:2|intcomma}} </td>
+        <td> <a href="{%url 'expenditures'%}?filing_id={{filing.filing_id}}">${{filing.period_total_disbursements|floatformat:2|intcomma}}</a> </td>
         <td> ${{filing.cash_on_hand_close_of_period|floatformat:2|intcomma}} </td>
         <td> ${{filing.period_independent_expenditures|floatformat:2|intcomma}} </td>
     </tr>

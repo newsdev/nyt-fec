@@ -4,4 +4,5 @@ from fec import views
 urlpatterns = [
         path('', views.index, name='index'),
         re_path(r'contributions/$', views.contributions, name='contributions'),
+        re_path(r'expenditures/$', views.expenditures, name='expenditures'),
     ]
