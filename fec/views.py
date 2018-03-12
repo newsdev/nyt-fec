@@ -82,7 +82,7 @@ def expenditures(request):
         results = results.filter(purpose_search=query)
     if recipient:
         query = SearchQuery(recipient)
-        results = results.filter(name_search=recipient)
+        results = results.filter(name_search=query)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
@@ -105,3 +105,49 @@ def expenditures(request):
 
     
     return render(request, 'expenditures.html', {'form': form, 'results':results, 'results_sum':results_sum})
+
+def ies(request):
+    form = IEForm(request.GET)
+    if not request.GET:
+        return render(request, 'ies.html', {'form': form})
+
+    comm = request.GET.get('committee')
+    filing_id = request.GET.get('filing_id')
+    recipient = request.GET.get('recipient')
+    purpose = request.GET.get('purpose')
+    candidate = request.GET.get('candidate')
+
+    results = ScheduleE.objects.filter(active=True)
+    if filing_id:
+        results = results.filter(filing_id=filing_id)
+    if purpose:
+        query = SearchQuery(purpose)
+        results = results.filter(purpose_search=query)
+    if recipient:
+        query = SearchQuery(recipient)
+        results = results.filter(name_search=query)
+    if candidate:
+        query = SearchQuery(candidate)
+        results = results.filter(candidate_search=query)
+
+    if comm:
+        matching_committees = Committee.find_committee_by_name(comm)
+        comm_ids = [c.fec_id for c in matching_committees]
+        results = results.filter(filer_committee_id_number__in=comm_ids)
+
+    order_by = request.GET.get('order_by', 'expenditure_amount')
+    order_direction = request.GET.get('order_direction', 'DESC')
+    if order_direction == "DESC":
+        results = results.order_by('-{}'.format(order_by))
+    else:
+        results = results.order_by(order_by)
+
+
+    results_sum = results.aggregate(Sum('expenditure_amount'))
+
+    paginator = Paginator(results, 50)
+    page = request.GET.get('page')
+    results = paginator.get_page(page)
+
+    
+    return render(request, 'ies.html', {'form': form, 'results':results, 'results_sum':results_sum})

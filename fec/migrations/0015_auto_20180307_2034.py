@@ -41,11 +41,11 @@ class Migration(migrations.Migration):
         migrations.RunSQL(
             sql='''
             CREATE TRIGGER contribution_name_update_trigger
-            BEFORE INSERT OR UPDATE OF contributor_first_name, contributor_middle_name, contributor_last_name, name_search
+            BEFORE INSERT OR UPDATE OF contributor_organization_name, contributor_first_name, contributor_middle_name, contributor_last_name, name_search
             ON fec_schedulea
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(
-              name_search, 'pg_catalog.english', contributor_first_name, contributor_middle_name, contributor_last_name);
+              name_search, 'pg_catalog.english', contributor_organization_name, contributor_first_name, contributor_middle_name, contributor_last_name);
 
             UPDATE fec_schedulea SET name_search = NULL;
             ''',

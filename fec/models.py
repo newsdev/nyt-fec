@@ -447,3 +447,57 @@ class ScheduleE(Transaction):
     date_signed = models.CharField(max_length=255, null=True, blank=True)
     memo_code = models.CharField(max_length=255, null=True, blank=True)
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
+    name_search = SearchVectorField(null=True)
+    purpose_search = SearchVectorField(null=True)
+    candidate_search = SearchVectorField(null=True)
+
+    @property
+    def payee_name(self):
+        if self.payee_organization_name:
+            return self.payee_organization_name
+        if self.payee_middle_name:
+            return ' '.join([self.payee_first_name, self.payee_middle_name, self.payee_last_name])
+        return ' '.join([self.payee_first_name, self.payee_last_name])
+
+    @property
+    def expenditure_date_formatted(self):
+        try:
+            return datetime.datetime.strptime(self.expenditure_date, '%Y%m%d')
+        except:
+            try:
+                return datetime.datetime.strptime(self.dissemination_date, '%Y%m%d')
+            except:
+                return
+
+    @property
+    def address(self):
+        try:
+            address_parts = [self.payee_street_1, self.payee_street_2, self.payee_city+", "+self.payee_state, self.payee_zip[0:5]]
+            return ' '.join([a for a in address_parts if a])
+        except:
+            return
+
+    @property
+    def candidate_name(self):
+        if self.payee_middle_name:
+            return ' '.join([self.candidate_first_name, self.candidate_middle_name, self.candidate_last_name])
+        return ' '.join([self.candidate_first_name, self.candidate_last_name])
+
+    @property
+    def district(self):
+        if self.candidate_district and self.candidate_district != '00':
+            return "{}-{}".format(self.candidate_state, self.candidate_district)
+        else:
+            return self.candidate_state
+
+    @property
+    def support(self):
+        if self.support_oppose_code == 'S':
+            return "Support"
+        if self.support_oppose_code == 'O':
+            return "Oppose"
+        return
+
+    class Meta(Transaction.Meta):
+        indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
+        indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['purpose_search']), GinIndex(fields=['candidate_search'])])
