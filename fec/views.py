@@ -116,6 +116,8 @@ def ies(request):
     recipient = request.GET.get('recipient')
     purpose = request.GET.get('purpose')
     candidate = request.GET.get('candidate')
+    state = request.GET.get('state')
+    district = request.GET.get('district')
 
     results = ScheduleE.objects.filter(active=True)
     if filing_id:
@@ -129,6 +131,11 @@ def ies(request):
     if candidate:
         query = SearchQuery(candidate)
         results = results.filter(candidate_search=query)
+    if state:
+        results = results.filter(candidate_state__iexact=state)
+    if district:
+        district = district.zfill(2)
+        results = results.filter(candidate_district=district)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
@@ -151,3 +158,15 @@ def ies(request):
 
     
     return render(request, 'ies.html', {'form': form, 'results':results, 'results_sum':results_sum})
+
+
+def races(request):
+    races = ScheduleE.objects.filter(active=True).values('candidate_state', 'candidate_district').annotate(Sum('expenditure_amount'))
+    
+    order_by = request.GET.get('order_by', 'expenditure_amount')
+    if order_by == 'race':
+        races = races.order_by('candidate_state','candidate_district')
+    else:
+        races = races.order_by('-expenditure_amount__sum')
+
+    return render(request, 'races.html', {'races':races})
