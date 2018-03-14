@@ -7,6 +7,7 @@ import process_filing
 import time
 import traceback
 import sys
+from decimal import Decimal
 from fec.models import *
 from django.conf import settings
 
@@ -147,8 +148,10 @@ def clean_filing_fields(log, processed_filing, filing_fieldnames):
 
         if key in filing_fieldnames:
             if addons.get(key):
-                print('adding last odd cycle total for {}'.format(key))
-            clean_filing[key] = v + addons.get(key, 0)
+                log.write('adding last odd cycle total for {}\n'.format(key))
+                v = Decimal(v) + addons.get(key, Decimal(0))
+            clean_filing[key] = v
+
         else:
             pass
             #log.write('dropping key {}\n'.format(k))
@@ -193,7 +196,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
 
     #do not load filings outside of this cycle (these will likely be amendments of old filings)
     cycle = settings.CYCLE
-    coverage_end = filing_dict['coverage_through_date']
+    coverage_end = filing_dict.get('coverage_through_date')
     if coverage_end:
         coverage_end_year = coverage_end[0:4]
         if filing_dict['form_type'] == 'F3P' and cycle % 4 == 0:
