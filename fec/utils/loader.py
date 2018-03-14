@@ -122,7 +122,12 @@ def load_itemizations(sked_model, skeds, debug=False):
     return sked_count
 
 def clean_filing_fields(log, processed_filing, filing_fieldnames):
-    ##should this all be moved to fec2json?
+    #check whether the filing requires adding odd-year totals
+    odd_filing = None
+    addons = {}
+    if processed_filing['form_type'] == 'F3' and is_even_year(processed_filing):
+        odd_filing = last_odd_filing(processed_filing)
+
     clean_filing = {}
     for k, v in processed_filing.items():
         key = k
@@ -137,20 +142,32 @@ def clean_filing_fields(log, processed_filing, filing_fieldnames):
             
         elif k.startswith("col_b_"):
             key = "cycle_{}".format(k.replace('col_b_',''))
+            if odd_filing:
+                addons[key] = getattr(odd_filing, key)
 
         if key in filing_fieldnames:
-            clean_filing[key] = v
+            if addons.get(key):
+                print('adding last odd cycle total for {}'.format(key))
+            clean_filing[key] = v + addons.get(key, 0)
         else:
             pass
             #log.write('dropping key {}\n'.format(k))
     return clean_filing
 
 def is_even_year(filing):
-    pass
-    
+    try:
+        year = int(filing['coverage_through_date'][0:4])
+    except:
+        log.write('Could not find coverage date for filing {}, not fixing sums\n'.format(filing['filing_id']))
+        return
+    if year % 2 == 0:
+        return True
+    return False
 
 def last_odd_filing(filing):
-    pass
+    committee_id = filing['filer_id']
+    committee_filings = Filing.objects.filter(filer_id=committee_id).order_by('-coverage_through_date','-date_signed')
+    return committee_filings[0]
 
 
 def load_filing(log, filing, filename, filing_fieldnames):
