@@ -11,8 +11,13 @@ from fec.forms import *
 
 def index(request):
     context = {}
-    context['new_filings'] = Filing.objects.filter(active=True).order_by('-created')[:100]
-    return render(request, 'index.html', context)
+    
+    results = Filing.objects.filter(active=True).order_by('-created')
+    paginator = Paginator(results, 50)
+    page = request.GET.get('page')
+    results = paginator.get_page(page)
+
+    return render(request, 'index.html', {'results':results})
 
 def contributions(request):
     form = ContributionForm(request.GET)
