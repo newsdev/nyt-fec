@@ -24,15 +24,19 @@
         <div class="navbar-header">
           <a class="navbar-brand" href="/">fec</span></a>
         </div>
-        {% if user %}
-        <ul class="nav navbar-nav navbar-right">
+        <ul class="nav navbar-nav navbar-left">
           <li class="navbar-summary">
-            <span>
-              {{ jwt_user_email }}
-            </span>
+            <span style="color: #333;font-weight:400;font-family: nyt-franklin;">
+                NYT-processed campaign finance data</span>
           </li>
         </ul>
-        {% endif %}
+         <ul class="nav navbar-nav navbar-right navbar-bits">
+          <li><a href="{%url 'contributions'%}">Contributions</a></li>
+          <li><a href="{%url 'expenditures'%}">Expenditures</a></li>
+          <li><a href="{%url 'ies'%}">IEs</a></li>
+          <li><a href="{%url 'races'%}">Races</a></li>
+        </ul>
+
       </div>
     </div>
 
@@ -42,7 +46,7 @@
 
     <footer class="footer">
       <div class="container">
-        <p class="text-muted">Have a question? Want to report a bug? <a href="mailto:newsapps@nytimes.com">Email the INT news applications team.</a>.</p>
+        <p class="text-muted">Have a question? Want to report a bug? <a href="mailto:newsapps@nytimes.com">Email the INT news applications team</a>.</p>
       </div>
     </footer>
 
