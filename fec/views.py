@@ -183,3 +183,11 @@ def top_donors(request):
     page = request.GET.get('page')
     results = paginator.get_page(page)
     return render(request, 'top_donors.html', {'results':results})
+
+
+def donor_details(request, donor_id):
+    context = {}
+    donor = Donor.objects.get(id=donor_id)
+    context['donor'] = donor
+    context['contribs'] = donor.schedulea_set.order_by('-contribution_amount')
+    return render(request, 'donor_details.html', context)

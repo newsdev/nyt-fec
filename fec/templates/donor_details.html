@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+<div>
+<h2> {{donor.nyt_name}} </h2>
+<dl class="dl-horizontal">
+    <dt> Employer </dt> <dd> {{donor.employer}}</dd>
+    <dt> Occupation </dt> <dd> {{donor.occupation}}</dd>
+    <dt> Total contributed </dt> <dd> {{donor.contribution_total}}</dd>
+</dl>
+</div>
+
+<div>
+<h3> Contributions </h3>
+<table class='table'>
+    <tr>
+        <th>Committee</th>
+        <th>Date</th>
+        <th>Amount</th>
+    {% for contrib in contribs %}
+    <tr>
+        <td>{{contrib.committee_name}}</td>
+        <td>{{contrib.contribution_date_formatted}}</td>
+        <td>${{contrib.contribution_amount|intcomma}}</td>
+    </tr>
+    {% endfor %}
+    
+</table>        
+
+{% endblock %}

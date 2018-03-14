@@ -14,8 +14,8 @@
     </tr>
     {% for result in results %}
     <tr>
-        <td> {{result.nyt_name}} </td>
-        <td> {{result.nyt_occupation}} </td>
+        <td> <a href="{%url 'donor_details' result.id %}">{{result.nyt_name}}</a> </td>
+        <td> {{result.nyt_employer}} </td>
         <td> {{result.contribution_total}} </td>
     </tr>
     {% endfor %}
