@@ -67,6 +67,7 @@ class Filing(BaseModel):
     election_district = models.CharField(max_length=10, null=True, blank=True)
     coverage_from_date = models.CharField(max_length=10, null=True, blank=True)
     coverage_through_date = models.CharField(max_length=10, null=True, blank=True)
+    election_date = models.CharField(max_length=10, null=True, blank=True)
     date_signed = models.CharField(max_length=10, null=True, blank=True)
     amends_filing = models.IntegerField(null=True, help_text='the filing id of the filing this filing amends')
     cash_on_hand_close_of_period = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)

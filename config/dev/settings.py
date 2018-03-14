@@ -118,3 +118,5 @@ STATIC_URL = "%s/" % STATICFILES_LOCATION
 MEDIAFILES_LOCATION = 'apps/fec/media'
 MEDIA_URL = "%s/" % MEDIAFILES_LOCATION
 DEFAULT_FILE_STORAGE = 'fec.utils.custom_storages.MediaStorage'
+
+CYCLE=2018

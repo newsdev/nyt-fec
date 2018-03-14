@@ -8,6 +8,7 @@ import time
 import traceback
 import sys
 from fec.models import *
+from django.conf import settings
 
 def get_filing_list(log, start_date, end_date, max_fails=5):
     api_key = os.environ.get('FEC_API_KEY')
@@ -144,6 +145,14 @@ def clean_filing_fields(log, processed_filing, filing_fieldnames):
             #log.write('dropping key {}\n'.format(k))
     return clean_filing
 
+def is_even_year(filing):
+    pass
+    
+
+def last_odd_filing(filing):
+    pass
+
+
 def load_filing(log, filing, filename, filing_fieldnames):
     #returns boolean depending on whether filing was loaded
     
@@ -157,12 +166,27 @@ def load_filing(log, filing, filename, filing_fieldnames):
             return False
         else:
             log.write("Reloading {}, it failed perviously\n".format(filing))
+    
     #filing does not exist or it failed previously
     try:
         filing_dict = process_filing.process_electronic_filing(filename)
     except Exception as e:
         log.write("fec2json failed {} {}\n".format(filing, e))
         return False
+
+    #do not load filings outside of this cycle (these will likely be amendments of old filings)
+    cycle = settings.CYCLE
+    coverage_end = filing_dict['coverage_through_date']
+    if coverage_end:
+        coverage_end_year = coverage_end[0:4]
+        if filing_dict['form_type'] == 'F3P' and cycle % 4 == 0:
+            #if it's a presidential filing, we want it if it's in the 4-year period.
+            acceptable_years = [cycle, cycle-1, cycle-3, cycle-4]
+        else:
+            acceptable_years = [cycle, cycle-1]
+        if int(coverage_end_year) not in acceptable_years:
+            log.write('Filing {} covered through {}, not importing\n'.format(coverage_end))
+            return False
 
     #deal with amended filings
     if filing_dict['amendment']:
