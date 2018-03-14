@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+<h2> Top Donors </h2>
+<table class="table">
+    <tr>
+        <th> Name </th>
+        <th> Employer </th>
+        <th> Contributions total </th>
+
+    </tr>
+    {% for result in results %}
+    <tr>
+        <td> {{result.nyt_name}} </td>
+        <td> {{result.nyt_occupation}} </td>
+        <td> {{result.contribution_total}} </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if results.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ results.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ results.number }} of {{ results.paginator.num_pages }}.
+        </span>
+
+        {% if results.has_next %}
+            <a href="?page={{ results.next_page_number }}">next</a> |
+            <a href="?page={{ results.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+        
+
+{% endblock %}

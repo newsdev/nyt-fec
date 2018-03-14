@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchVector
 from django.contrib.postgres.indexes import GinIndex
+from django.db.models import Sum
 
 import datetime
 
@@ -223,6 +224,23 @@ class Filing(BaseModel):
             models.Index(fields=['committee_name']),
         ]
 
+class Donor(BaseModel):
+    nyt_name = models.CharField(max_length=255, null=True, blank=True)
+    nyt_employer = models.CharField(max_length=255, null=True, blank=True)
+    nyt_occupation = models.CharField(max_length=255, null=True, blank=True)
+    nyt_note = models.TextField(null=True, blank=True)
+
+    @property
+    def contribution_total(self):
+        try:
+            amount = self.schedulea_set.aggregate(Sum('contribution_amount'))['contribution_amount__sum']
+            return '${:,.2f}'.format(amount)
+        except:
+            return
+
+    def __str__(self):
+        return self.nyt_name
+
 class Transaction(BaseModel):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
     form_type = models.CharField(max_length=255, null=True, blank=True)
@@ -305,6 +323,7 @@ class ScheduleA(Transaction):
     reference_code = models.CharField(max_length=255, null=True, blank=True)
     name_search = SearchVectorField(null=True)
     occupation_search = SearchVectorField(null=True)
+    donor = models.ForeignKey(Donor, null=True, on_delete=models.SET_NULL)
     
     """
     these search fields require triggers. Please see migration 0015 which I hand-edited
@@ -337,7 +356,10 @@ class ScheduleA(Transaction):
 
     class Meta(Transaction.Meta):
         indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
-        indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['occupation_search'])])
+        indexes.extend(
+            [GinIndex(fields=['name_search']),
+            models.Index(fields=['contribution_amount']),
+            GinIndex(fields=['occupation_search'])])
 
 class ScheduleB(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)

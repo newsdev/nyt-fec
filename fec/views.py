@@ -175,3 +175,11 @@ def races(request):
         races = races.order_by('-expenditure_amount__sum')
 
     return render(request, 'races.html', {'races':races})
+
+def top_donors(request):
+    donors = sorted(Donor.objects.all(), key=lambda d: d.contribution_total, reverse=True)
+    #this sort might be too slow for words once the database hits a reasonable size, but also maybe not bc we will never have that many named donors
+    paginator = Paginator(donors, 50)
+    page = request.GET.get('page')
+    results = paginator.get_page(page)
+    return render(request, 'top_donors.html', {'results':results})
