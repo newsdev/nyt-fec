@@ -205,7 +205,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
         else:
             acceptable_years = [cycle, cycle-1]
         if int(coverage_end_year) not in acceptable_years:
-            log.write('Filing {} covered through {}, not importing\n'.format(coverage_end))
+            log.write('Covered through {}, not importing\n'.format(coverage_end))
             return False
 
     #deal with amended filings
