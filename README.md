@@ -1,5 +1,8 @@
 # fec
 
+## Note!
+App is still kind of in the scratchpad phase, absolutely no promises that it works or I won't make breaking changes.
+
 ### Setup instructions
 1. pull this repo
 1. `mkvirtualenv fec --python $(which python3)`
