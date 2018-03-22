@@ -10,6 +10,8 @@ import sys
 from decimal import Decimal
 from fec.models import *
 from django.conf import settings
+import urllib3
+from fec.utils import gcp
 
 def get_filing_list(log, start_date, end_date, max_fails=5):
     api_key = os.environ.get('FEC_API_KEY')
@@ -66,8 +68,31 @@ def evaluate_filing(log, filename, filing):
                 return True
         return False
 
-def download_filings(log, filings, filing_dir="filings/"):
+def download_filings_to_gcp(log, filings, bucket, path):
+    path = path.strip('/')
     #takes a list of filing ids, downloads the files
+    http = urllib3.PoolManager()
+    bucket = gcp.Bucket(bucket)
+    existing_filings = bucket.google_bucket_listdir(path)
+
+    for filing in filings:
+        #download filings
+        filename = '{}.csv'.format(filing)
+        if filename not in existing_filings:
+            file_url = 'http://docquery.fec.gov/csv/{}/{}.csv'.format(str(filing)[-3:],filing)
+            if os.path.isfile(filename):
+                log.write("we already have filing {} downloaded\n".format(filing))
+            else:
+                response = http.request('GET', file_url)
+                gcp_filename = path+"/"+filename
+                blob = bucket.open_google_file(gcp_filename)
+                gcp.write_to_google_cloud(blob, response.data)
+                log.write('wrote {} to gcp'.format(filing))
+
+
+def download_filings_locally(log, filings, filing_dir="filings/"):
+    #takes a list of filing ids, downloads the files
+    http = urllib3.PoolManager()
     existing_filings = os.listdir(filing_dir)
     for filing in filings:
         #download filings
@@ -77,7 +102,13 @@ def download_filings(log, filings, filing_dir="filings/"):
             if os.path.isfile(filename):
                 log.write("we already have filing {} downloaded\n".format(filing))
             else:
-                os.system('curl -o {} {}'.format(filename, file_url))
+                response = http.request('GET', file_url)
+                with open(filename,'wb') as f:
+                    f.write(response.data)
+                log.write('downloaded {}'.format(filing))
+
+                #os.system('curl -o {} {}'.format(filename, file_url))
+
 
 def evaluate_filings(log, filings, filing_dir="filings/"):
     #filings is a list of ids, filing_dir is the directory where filings are saved.

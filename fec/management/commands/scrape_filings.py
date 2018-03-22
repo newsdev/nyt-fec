@@ -65,7 +65,7 @@ class Command(BaseCommand):
             filings = loader.get_filing_list(log, start_date, end_date)
             assert filings, "Failed to find any filings in FEC API"
 
-            loader.download_filings(log, filings, filing_dir)
+            loader.download_filings_locally(log, filings, filing_dir)
             good_filings = loader.evaluate_filings(log, filings, filing_dir)
 
 
