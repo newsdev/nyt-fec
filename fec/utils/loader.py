@@ -7,6 +7,7 @@ import process_filing
 import time
 import traceback
 import sys
+import urllib3
 from decimal import Decimal
 from fec.models import *
 from django.conf import settings
@@ -68,6 +69,7 @@ def evaluate_filing(log, filename, filing):
 
 def download_filings(log, filings, filing_dir="filings/"):
     #takes a list of filing ids, downloads the files
+    http = urllib3.PoolManager()
     existing_filings = os.listdir(filing_dir)
     for filing in filings:
         #download filings
@@ -77,7 +79,11 @@ def download_filings(log, filings, filing_dir="filings/"):
             if os.path.isfile(filename):
                 log.write("we already have filing {} downloaded\n".format(filing))
             else:
-                os.system('curl -o {} {}'.format(filename, file_url))
+                response = http.request('GET', file_url)
+                with open(filename,'wb') as f:
+                    f.write(response.data)
+                log.write('downloaded {}'.format(filing))
+                #os.system('curl -o {} {}'.format(filename, file_url))
 
 def evaluate_filings(log, filings, filing_dir="filings/"):
     #filings is a list of ids, filing_dir is the directory where filings are saved.
