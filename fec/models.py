@@ -24,6 +24,16 @@ STATUS_CHOICES = (('ACTIVE', 'active'),
                     ('PROCESSING','processing'),
                     ('FAILED','failed'))
 
+class FilingStatus(models.Model):
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
+    filing_id = models.IntegerField(primary_key=True)
+    status = models.CharField(max_length=20, blank=True, null=True)
+    #status options should be 'SUCCESS','FAILED','REFUSED'
+    #where 'REFUSED' means we decided not to upload the filing
+    #eg because it's old or a kind of filing we're not loading
+    #or actblue
+
 class Committee(BaseModel):
     fec_id = models.CharField(max_length=10, primary_key=True)
     committee_name = models.CharField(max_length=255, blank=True, null=True)

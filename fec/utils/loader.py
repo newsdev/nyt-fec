@@ -12,7 +12,12 @@ from decimal import Decimal
 from fec.models import *
 from django.conf import settings
 
+ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24']
+BAD_COMMITTEES = ['C00401224']
+
 def get_filing_list(log, start_date, end_date, max_fails=5):
+    #gets list of available filings from the FEC.
+    #TODO: institute an API key pool or fallback?
     api_key = os.environ.get('FEC_API_KEY')
     url = "https://api.open.fec.gov/v1/efile/filings/?per_page=100&sort=-receipt_date"
     url += "&api_key={}".format(api_key)
@@ -47,25 +52,35 @@ def get_filing_list(log, start_date, end_date, max_fails=5):
         if len(results) == 0:
             break
         for f in results:
-            filings.append(f['file_number'])
+            if evaluate_filing(log, f):
+                filings.append(f['file_number'])
 
     return filings
 
-
-def evaluate_filing(log, filename, filing):
-    with open(filename, "r") as filing_csv:
-        #pop each filing open, check the filing type, and add to queue if we want this one
-        reader = csv.reader(filing_csv)
-        try:
-            next(reader)
-        except:
-            log.write("filing {} has no lines.\n".format(filing))
+def evaluate_filing(log, filing):
+    #determines whether filings in the API should be downloaded
+    filing_id = filing['file_number']
+    existing_filings = FilingStatus.objects.filter(filing_id=filing_id)
+    if len(existing_filings) > 0:
+        #remove filings that were successful
+        if existing_filings[0].status in ['SUCCESS','REFUSED']:
             return False
-        form_line = next(reader)
-        if form_line[0].replace('A','').replace('N','') in ['F3','F3X','F3P','F24']:
-            if form_line[1] not in ['C00401224']: #bad filings we don't want to load (actblue!)
-                return True
+        else:
+            #include filings that failed or are missing a status marker
+            return True
+    #remove bad committees:
+    if filing['committee_id'] in BAD_COMMITTEES:
+        status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
+        status.save()
         return False
+    #remove filing types we're not loading
+    if filing['form_type'].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
+        status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
+        status.save()
+        return False
+    #by the time we get here, it's filings we haven't seen but don't meet our refused conditions    
+    return True
+
 
 def download_filings(log, filings, filing_dir="filings/"):
     #takes a list of filing ids, downloads the files
@@ -84,26 +99,6 @@ def download_filings(log, filings, filing_dir="filings/"):
                     f.write(response.data)
                 log.write('downloaded {}'.format(filing))
                 #os.system('curl -o {} {}'.format(filename, file_url))
-
-def evaluate_filings(log, filings, filing_dir="filings/"):
-    #filings is a list of ids, filing_dir is the directory where filings are saved.
-    #here we loop through the filings to see if they're valid.
-    good_filings = []
-    existing_filings = {}
-    for f in os.listdir(filing_dir):
-        try:
-            existing_filings[int(f.split(".")[0])] = "{}{}".format(filing_dir, f)
-        except:
-            #skip filenames that don't conform to the filename pattern
-            pass
-    for filing in filings:
-        if filing in existing_filings:
-            if evaluate_filing(log, existing_filings[filing], filing):
-                good_filings.append(filing)
-        else:
-            log.write('Filing {} not found\n'.format(filing))
-    return good_filings
-
 
 def load_itemizations(sked_model, skeds, debug=False):
     #if debug is true, we'll load one at a time, otherwise bulk_create
@@ -178,6 +173,39 @@ def last_odd_filing(filing):
     committee_filings = Filing.objects.filter(filer_id=committee_id).order_by('-coverage_through_date','-date_signed')
     return committee_filings[0]
 
+
+def evaluate_filing_file(log, filename, filing_id):
+    with open(filename, "r") as filing_csv:
+        #pop each filing open, check the filing type, and add to queue if we want this one
+        reader = csv.reader(filing_csv)
+        try:
+            next(reader)
+        except:
+            log.write("filing {} has no lines.\n".format(filing_id))
+            return False
+        form_line = next(reader)
+        if form_line[0].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
+            log.write("filing {} is not in {}.\n".format(filing_id, ACCEPTABLE_FORMS))
+            return False
+        if form_line[1] in BAD_COMMITTEES:
+            log.write("filing {} is from an unacceptable committee {}.\n".format(filing_id, BAD_COMMITTEES))
+            return False
+
+        #next check if we already have the filing
+        filings = Filing.objects.filter(filing_id=filing_id)
+        if len(filings) == 0:
+            return True
+        if filings[0].status == 'FAILED':
+            #delete the filing. it failed, so we're going to try again
+            filings.delete()
+            return True
+        if filings[0].status == 'PROCESSING':
+            #alert, but do not delete or reload.
+            log.write('Filing {} is processing. If this goes on for a long time, it might have failed silently, so check it out.'.format(filing_id))
+            return False
+        #if we get here, a filing exists, it's not 'failed' or 'processing' so we should not load
+        log.write("filing {} has already been loaded.\n".format(filing_id))
+        return False
 
 def load_filing(log, filing, filename, filing_fieldnames):
     #returns boolean depending on whether filing was loaded
@@ -295,6 +323,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
         #but remove the itemizations
         filing_obj.status='FAILED'
         filing_obj.save()
+        create_or_update_filing_status(filing, 'FAILED')
         ScheduleA.objects.filter(filing_id=filing).delete()
         ScheduleB.objects.filter(filing_id=filing).delete()
         ScheduleE.objects.filter(filing_id=filing).delete()
@@ -304,19 +333,41 @@ def load_filing(log, filing, filename, filing_fieldnames):
     log.write('Marking {} as ACTIVE\n'.format(filing))
     filing_obj.status='ACTIVE'
     filing_obj.save()
+    create_or_update_filing_status(filing, 'SUCCESS')
     return True
 
+def create_or_update_filing_status(filing_id, status):
+    fs = FilingStatus.objects.filter(filing_id=filing_id)
+    if len(fs) > 0:
+        fs = fs[0]
+        fs.status = status
+        fs.save()
+    else:
+        fs = FilingStatus.objects.create(filing_id=filing_id, status=status)
+        fs.save()    
 
-def load_filings(log, good_filings, filing_dir):
+
+def load_filings(log, filing_dir):
     filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
 
-    for filing in good_filings:
-                
-        log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
+    filing_csvs = os.listdir(filing_dir)
+
+    for filename in filing_csvs:
+        filing_id = filename.split(".")[0]
+        try:
+            int(filing_id)
+        except:
+            log.write('did not recognize filing {}'.format(filename))
+            continue
+
+        full_filename = "{}{}".format(filing_dir, filename)
         
-        filename = "{}{}.csv".format(filing_dir, filing)
+        if not evaluate_filing_file(log, full_filename, filing_id):
+            continue
+                
+        log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing_id))
+        
 
+        if load_filing(log, filing_id, full_filename, filing_fieldnames):
 
-        if load_filing(log, filing, filename, filing_fieldnames):
-
-            log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing))
+            log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing_id))
