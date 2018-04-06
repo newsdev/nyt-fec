@@ -15,7 +15,7 @@ from django.conf import settings
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24']
 BAD_COMMITTEES = ['C00401224']
 
-def get_filing_list(log, start_date, end_date, max_fails=5):
+def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
     #TODO: institute an API key pool or fallback?
     api_key = os.environ.get('FEC_API_KEY')
@@ -82,7 +82,7 @@ def evaluate_filing(log, filing):
         status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
         status.save()
         return False
-        
+
     #remove filings whose coverage period ended outside the current cycle
     cycle = settings.CYCLE
     coverage_end = filing['coverage_end_date']
