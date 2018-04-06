@@ -97,7 +97,7 @@ def download_filings(log, filings, filing_dir="filings/"):
                 response = http.request('GET', file_url)
                 with open(filename,'wb') as f:
                     f.write(response.data)
-                log.write('downloaded {}'.format(filing))
+                log.write('downloaded {}\n'.format(filing))
                 #os.system('curl -o {} {}'.format(filename, file_url))
 
 def load_itemizations(sked_model, skeds, debug=False):
@@ -114,6 +114,13 @@ def load_itemizations(sked_model, skeds, debug=False):
         chunk = []
         for line in skeds:
             sked_count += 1
+            if line['form_type'].startswith('SB28'):
+                #these are refunds and should be processed as contribs
+                #we're going to create them individually to prevent trouble
+                refund = convert_refund_to_skeda(line)
+                ScheduleA.objects.create(**refund)
+                continue
+
             if line['memo_code'] == 'X':
                 line['status'] = 'MEMO'
             chunk.append(sked_model(**line))
@@ -122,6 +129,38 @@ def load_itemizations(sked_model, skeds, debug=False):
                 chunk = []
         sked_model.objects.bulk_create(chunk)
     return sked_count
+
+def convert_refund_to_skeda(line):
+    common_fields = ['form_type',
+                    'filer_committee_id_number',
+                    'filing_id',
+                    'transaction_id',
+                    'back_reference_tran_id_number',
+                    'back_reference_sched_name',
+                    'entity_type',
+                    'election_code',
+                    'election_other_description',
+                    'memo_code',
+                    'memo_text_description'
+                    ]
+    skeda_dict = {}
+    for field in common_fields:
+        skeda_dict[field] = line[field]
+    skeda_dict['contributor_organization_name'] = line['payee_organization_name']
+    skeda_dict['contributor_last_name'] = line['payee_last_name']
+    skeda_dict['contributor_first_name'] = line['payee_first_name']
+    skeda_dict['contributor_middle_name'] = line['payee_middle_name']
+    skeda_dict['contributor_prefix'] = line['payee_prefix']
+    skeda_dict['contributor_suffix'] = line['payee_suffix']
+    skeda_dict['contributor_street_1'] = line['payee_street_1']
+    skeda_dict['contributor_street_2'] = line['payee_street_2']
+    skeda_dict['contributor_city'] = line['payee_city']
+    skeda_dict['contributor_state'] = line['payee_state']
+    skeda_dict['contributor_zip'] = line['payee_zip']
+    skeda_dict['contribution_date'] = line['expenditure_date']
+    skeda_dict['contribution_amount'] = -1*Decimal(line['expenditure_amount'])
+    
+    return skeda_dict
 
 def clean_filing_fields(log, processed_filing, filing_fieldnames):
     #check whether the filing requires adding odd-year totals
@@ -181,14 +220,20 @@ def evaluate_filing_file(log, filename, filing_id):
         try:
             next(reader)
         except:
-            log.write("filing {} has no lines.\n".format(filing_id))
+            #log.write("filing {} has no lines.\n".format(filing_id))
             return False
         form_line = next(reader)
         if form_line[0].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
-            log.write("filing {} is not in {}.\n".format(filing_id, ACCEPTABLE_FORMS))
+            #log.write("filing {} is not in {}.\n".format(filing_id, ACCEPTABLE_FORMS))
+            create_or_update_filing_status(filing_id, 'REFUSED')
             return False
         if form_line[1] in BAD_COMMITTEES:
-            log.write("filing {} is from an unacceptable committee {}.\n".format(filing_id, BAD_COMMITTEES))
+            #log.write("filing {} is from an unacceptable committee {}.\n".format(filing_id, BAD_COMMITTEES))
+            create_or_update_filing_status(filing_id, 'REFUSED')
+            return False
+
+        #next, check if this filing has previously been refused
+        if len(FilingStatus.objects.filter(filing_id=filing_id, status='REFUSED')) > 0:
             return False
 
         #next check if we already have the filing
@@ -201,10 +246,11 @@ def evaluate_filing_file(log, filename, filing_id):
             return True
         if filings[0].status == 'PROCESSING':
             #alert, but do not delete or reload.
-            log.write('Filing {} is processing. If this goes on for a long time, it might have failed silently, so check it out.'.format(filing_id))
+            #log.write('Filing {} is processing. If this goes on for a long time, it might have failed silently, so check it out.'.format(filing_id))
             return False
+
         #if we get here, a filing exists, it's not 'failed' or 'processing' so we should not load
-        log.write("filing {} has already been loaded.\n".format(filing_id))
+        #log.write("filing {} has already been loaded.\n".format(filing_id))
         return False
 
 def load_filing(log, filing, filename, filing_fieldnames):
@@ -240,6 +286,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
             acceptable_years = [cycle, cycle-1]
         if int(coverage_end_year) not in acceptable_years:
             log.write('Covered through {}, not importing\n'.format(coverage_end))
+            create_or_update_filing_status(filing, 'REFUSED')
             return False
 
     #deal with amended filings
@@ -327,7 +374,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
         ScheduleA.objects.filter(filing_id=filing).delete()
         ScheduleB.objects.filter(filing_id=filing).delete()
         ScheduleE.objects.filter(filing_id=filing).delete()
-        log.write('Something failed in itemizations, marking {} as FAILED\n'.format(filing_id))
+        log.write('Something failed in itemizations, marking {} as FAILED\n'.format(filing))
         return False
 
     log.write('Marking {} as ACTIVE\n'.format(filing))
