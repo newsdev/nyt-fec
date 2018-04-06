@@ -60,6 +60,8 @@ def get_filing_list(log, start_date, end_date, max_fails=5):
 def evaluate_filing(log, filing):
     #determines whether filings in the API should be downloaded
     filing_id = filing['file_number']
+
+    #check whether we've already marked this filing as bad
     existing_filings = FilingStatus.objects.filter(filing_id=filing_id)
     if len(existing_filings) > 0:
         #remove filings that were successful
@@ -68,16 +70,34 @@ def evaluate_filing(log, filing):
         else:
             #include filings that failed or are missing a status marker
             return True
+
     #remove bad committees:
     if filing['committee_id'] in BAD_COMMITTEES:
         status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
         status.save()
         return False
+
     #remove filing types we're not loading
     if filing['form_type'].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
         status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
         status.save()
         return False
+        
+    #remove filings whose coverage period ended outside the current cycle
+    cycle = settings.CYCLE
+    coverage_end = filing['coverage_end_date']
+    if coverage_end:
+        coverage_end_year = coverage_end[0:4]
+        if filing['form_type'] == 'F3P' and cycle % 4 == 0:
+            #if it's a presidential filing, we want it if it's in the 4-year period.
+            acceptable_years = [cycle, cycle-1, cycle-3, cycle-4]
+        else:
+            acceptable_years = [cycle, cycle-1]
+        if int(coverage_end_year) not in acceptable_years:
+            create_or_update_filing_status(filing, 'REFUSED')
+            return False
+
+
     #by the time we get here, it's filings we haven't seen but don't meet our refused conditions    
     return True
 
