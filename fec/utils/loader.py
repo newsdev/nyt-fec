@@ -39,7 +39,7 @@ def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
             if fails >= max_fails:
                 log.write('Failed to download valid JSON from FEC site {} times'.format(max_fails))
                 return None
-            time.sleep(5)
+            time.sleep(waittime)
         try:
             results = files['results']
         except KeyError:
@@ -47,7 +47,7 @@ def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
             if fails >= max_fails:
                 log.write('Failed to download valid JSON from FEC site {} times'.format(max_fails))
                 return None
-            time.sleep(5)
+            time.sleep(waittime)
 
         if len(results) == 0:
             break
