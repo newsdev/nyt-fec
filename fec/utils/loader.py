@@ -94,7 +94,7 @@ def evaluate_filing(log, filing):
         else:
             acceptable_years = [cycle, cycle-1]
         if int(coverage_end_year) not in acceptable_years:
-            create_or_update_filing_status(filing, 'REFUSED')
+            create_or_update_filing_status(filing_id, 'REFUSED')
             return False
 
 
