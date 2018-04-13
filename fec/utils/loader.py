@@ -417,7 +417,7 @@ def create_or_update_filing_status(filing_id, status):
 def load_filings(log, filing_dir):
     filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
 
-    filing_csvs = os.listdir(filing_dir)
+    filing_csvs = sorted(os.listdir(filing_dir))
 
     for filename in filing_csvs:
         filing_id = filename.split(".")[0]
