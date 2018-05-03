@@ -61,11 +61,13 @@ class Command(BaseCommand):
             filing_dir = 'filings/'
 
         while True:
+            print("looking for filings for period {}-{}".format(start_date, end_date))
             #keep looping if an interval is provided, this is mostly for testing
             filings = loader.get_filing_list(log, start_date, end_date)
-            assert filings, "Failed to find any filings in FEC API"
-
-            loader.download_filings(log, filings, filing_dir)
+            if not filings:
+                print("failed to find any filings for period {}-{}".format(start_date, end_date))
+            else:
+                loader.download_filings(log, filings, filing_dir)
 
             if logfile:
                 log.close()
