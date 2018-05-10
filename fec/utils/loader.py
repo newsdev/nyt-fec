@@ -13,7 +13,7 @@ from fec.models import *
 from django.conf import settings
 
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24']
-BAD_COMMITTEES = ['C00401224']
+BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 
 def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
