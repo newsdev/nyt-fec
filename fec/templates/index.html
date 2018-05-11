@@ -4,48 +4,11 @@
 
 {% block content %}
 
-<h2> Newest Filings </h2>
-<table class="table">
-    <tr>
-        <th> Committee </th>
-        <th> Filing Type </th>
-        <th> Import time </th>
-        <th> Receipts </th>
-        <th> Disbursements </th>
-        <th> Cash </th>
-        <th> IEs </th>
-    </tr>
-    {% for filing in results %}
-    <tr>
-        <td> {{filing.committee_name}} </td>
-        <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
-        <td> {{filing.created}} </td>
-        <td> <a href="{%url 'contributions'%}?filing_id={{filing.filing_id}}">${{filing.period_total_receipts|floatformat:2|intcomma}}</a> </td>
-        <td> <a href="{%url 'expenditures'%}?filing_id={{filing.filing_id}}">${{filing.period_total_disbursements|floatformat:2|intcomma}}</a> </td>
-        <td> ${{filing.cash_on_hand_close_of_period|floatformat:2|intcomma}} </td>
-        <td> <a href="{%url 'ies'%}?filing_id={{filing.filing_id}}">${{filing.period_independent_expenditures|floatformat:2|intcomma}}</a> </td>
-    </tr>
-    {% endfor %}
-</table>
+<h2> 2018 campaign finance </h2>
 
-<div class="pagination">
-    <span class="step-links">
-        {% if results.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ results.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ results.number }} of {{ results.paginator.num_pages }}.
-        </span>
-
-        {% if results.has_next %}
-            <a href="?page={{ results.next_page_number }}">next</a> |
-            <a href="?page={{ results.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
-
-        
-
+<p> <a href="{%url 'filings'%}">Filings</a> </p>
+<p> <a href="{%url 'contributions'%}">Contributions</a> </p>
+<p> <a href="{%url 'expenditures'%}">Expenditures</a> </p>
+<p> <a href="{%url 'ies'%}">Independent Expenditures</a> </p>
+<p> <a href="{%url 'races'%}">Races</a> </p>
 {% endblock %}

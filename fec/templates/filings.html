@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+
+<h2> Search for filings </h2>
+<div class="row">
+<form action="/filings/" method="get">
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+</div>
+
+<table class="table">
+    <tr>
+        <th> Committee </th>
+        <th> Filing Type </th>
+        <th> Import time </th>
+        <th> Filing date </th>
+        <th> Receipts </th>
+        <th> Disbursements </th>
+        <th> Cash </th>
+        <th> IEs </th>
+    </tr>
+    {% for filing in results %}
+    <tr>
+        <td> {{filing.committee_name}} </td>
+        <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
+        <td> {{filing.created}} </td>
+        <td> {% if filing.date_signed|length == 8 %} {{filing.date_signed|slice:"6:8"}}-{{filing.date_signed|slice:"4:6"}}-{{filing.date_signed|slice:"0:4"}} {% else %} {{filing.date_signed}}{%endif%}</td>
+        <td> <a href="{%url 'contributions'%}?filing_id={{filing.filing_id}}">${{filing.period_total_receipts|floatformat:2|intcomma}}</a> </td>
+        <td> <a href="{%url 'expenditures'%}?filing_id={{filing.filing_id}}">${{filing.period_total_disbursements|floatformat:2|intcomma}}</a> </td>
+        <td> ${{filing.cash_on_hand_close_of_period|floatformat:2|intcomma}} </td>
+        <td> <a href="{%url 'ies'%}?filing_id={{filing.filing_id}}">${{filing.period_independent_expenditures|floatformat:2|intcomma}}</a> </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if results.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ results.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ results.number }} of {{ results.paginator.num_pages }}.
+        </span>
+
+        {% if results.has_next %}
+            <a href="?page={{ results.next_page_number }}">next</a> |
+            <a href="?page={{ results.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+        
+
+{% endblock %}

@@ -10,14 +10,29 @@ from fec.models import *
 from fec.forms import *
 
 def index(request):
-    context = {}
-    
+    return render(request, 'index.html')
+
+def filings(request):
+    form = FilingForm(request.GET)
     results = Filing.objects.filter(active=True).order_by('-created')
+    
+    comm = request.GET.get('committee')
+    form_type = request.GET.get('form_type')
+    min_raised = request.GET.get('min_raised')
+    exclude_amendments = request.GET.get('exclude_amendments')
+    if comm:
+        results = results.filter(committee_name__icontains=comm)
+    if form_type:
+        results = results.filter(form=form_type)
+    if min_raised:
+        results = results.filter(period_total_receipts__gte=min_raised)
+    if exclude_amendments:
+        results = results.filter(amends_filing=None)
+
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-
-    return render(request, 'index.html', {'results':results})
+    return render(request, 'filings.html', {'form': form, 'results':results})
 
 def contributions(request):
     form = ContributionForm(request.GET)
