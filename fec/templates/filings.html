@@ -29,7 +29,7 @@
         <td> {{filing.committee_name}} </td>
         <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
         <td> {{filing.created}} </td>
-        <td> {% if filing.date_signed|length == 8 %} {{filing.date_signed|slice:"6:8"}}-{{filing.date_signed|slice:"4:6"}}-{{filing.date_signed|slice:"0:4"}} {% else %} {{filing.date_signed}}{%endif%}</td>
+        <td> {% if filing.date_signed|length == 8 %} {{filing.date_signed|slice:"4:6"}}/{{filing.date_signed|slice:"6:8"}}/{{filing.date_signed|slice:"0:4"}} {% else %} {{filing.date_signed}}{%endif%}</td>
         <td> <a href="{%url 'contributions'%}?filing_id={{filing.filing_id}}">${{filing.period_total_receipts|floatformat:2|intcomma}}</a> </td>
         <td> <a href="{%url 'expenditures'%}?filing_id={{filing.filing_id}}">${{filing.period_total_disbursements|floatformat:2|intcomma}}</a> </td>
         <td> ${{filing.cash_on_hand_close_of_period|floatformat:2|intcomma}} </td>
