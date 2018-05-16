@@ -311,18 +311,27 @@ def load_filing(log, filing, filename, filing_fieldnames):
 
     #deal with amended filings
     if filing_dict['amendment']:
-        amends_filing = int(filing_dict['amends_filing'])
         try:
-            amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
-        except IndexError:
-            log.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
+            amends_filing_str = filing_dict['amends_filing']
+            amends_filing = int(amends_filing_str)
+        except ValueError:
+            #should be a warning or possibly critical
+            log.write('Invalid amendment number {} for filing {}, creating filing and marking as \n'.format(filing_dict['amends_filing'],filing))
+            filing_obj = Filing.objects.create(filing_id=filing, status='FAILED')
+            filing_obj.save()
+            return False
         else:
-            amended_filing.active = False
-            amended_filing.status = 'SUPERSEDED'
-            amended_filing.save()
-            ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-            ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-            ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+            try:
+                amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
+            except IndexError:
+                log.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
+            else:
+                amended_filing.active = False
+                amended_filing.status = 'SUPERSEDED'
+                amended_filing.save()
+                ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
 
     if filing_dict['form_type'] in ['F3','F3X','F3P']:
         #could be a periodic, so see if there are covered forms that need to be deactivated
