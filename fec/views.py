@@ -27,6 +27,7 @@ def filings(request):
     if min_raised:
         results = results.filter(period_total_receipts__gte=min_raised)
     if exclude_amendments:
+        print(exclude_amendments)
         results = results.filter(amends_filing=None)
 
     paginator = Paginator(results, 50)

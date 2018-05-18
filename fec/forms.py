@@ -27,4 +27,4 @@ class FilingForm(forms.Form):
     committee = forms.CharField(label='Committee name or ID', max_length=500, required=False)
     form_type = forms.CharField(label='Form type', max_length=500, required=False)
     min_raised = forms.DecimalField(label='Minimum raised', required=False)
-    exclude_amended = forms.BooleanField(label='Exclude amendments', required=False)
+    exclude_amendments = forms.BooleanField(label='Exclude amendments', required=False)
