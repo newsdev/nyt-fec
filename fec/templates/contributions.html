@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<h2> Search for contributions </h2>
+<h2> Search for receipts </h2>
 <div class="row">
 <form action="/contributions/" method="get">
     {{ form.as_p }}
@@ -18,8 +18,8 @@
 <div class="page-header row">
   <div class="header-title">
     {% if results_sum %}
-    <h2> Contributions total: ${{results_sum.contribution_amount__sum|floatformat:2|intcomma}} </h2>
-    This total includes only itemized contributions.
+    <h2> Reciepts total: ${{results_sum.contribution_amount__sum|floatformat:2|intcomma}} </h2>
+    This total includes only itemized receipts.
     {% endif %} 
 
     </div>
@@ -33,6 +33,7 @@
         <th> Occupation </th>
         <th> Amount </th>
         <th> Date </th>
+        <th> Line Type </th>
     </tr>
     {% for result in results %}
     <tr>
@@ -43,29 +44,16 @@
         <td>{{result.contributor_occupation}}</td>
         <td>${{result.contribution_amount|floatformat:2|intcomma}}</td>
         <td>{{result.contribution_date_formatted|date:"SHORT_DATE_FORMAT"}}</td>
+        <td>{{result.form_type}}</td>
     </tr>
   {% endfor %}
 </table>
 </div>
-<div class="pagination">
-    <span class="step-links">
-        {% if results.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ results.previous_page_number }}">previous</a>
-        {% endif %}
 
-        <span class="current">
-            Page {{ results.number }} of {{ results.paginator.num_pages }}.
-        </span>
-
-        {% if results.has_next %}
-            <a href="?page={{ results.next_page_number }}">next</a> |
-            <a href="?page={{ results.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
+{% include 'pagination.html' %}
 
 {% endif %}
+
 
 
 {% endblock %}
