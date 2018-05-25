@@ -343,11 +343,13 @@ class ScheduleA(Transaction):
 
     @property
     def contributor_name(self):
+        #oy. there are so many ways they can do this wrong.
         if self.contributor_organization_name:
             return self.contributor_organization_name
-        if self.contributor_middle_name:
-            return ' '.join([self.contributor_first_name, self.contributor_middle_name, self.contributor_last_name])
-        return ' '.join([self.contributor_first_name, self.contributor_last_name])
+        names = [n for n in [self.contributor_first_name, self.contributor_middle_name, self.contributor_last_name] if n]
+        if len(names) == 0:
+            return None
+        return " ".join(names)
 
     @property
     def contribution_date_formatted(self):
