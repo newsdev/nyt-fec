@@ -20,6 +20,8 @@ def filings(request):
     form_type = request.GET.get('form_type')
     min_raised = request.GET.get('min_raised')
     exclude_amendments = request.GET.get('exclude_amendments')
+    min_date = request.GET.get('min_date')
+    max_date = request.GET.get('max_date')
     if comm:
         results = results.filter(committee_name__icontains=comm)
     if form_type:
@@ -27,8 +29,11 @@ def filings(request):
     if min_raised:
         results = results.filter(period_total_receipts__gte=min_raised)
     if exclude_amendments:
-        print(exclude_amendments)
         results = results.filter(amends_filing=None)
+    if min_date:
+        results = results.filter(date_signed__gte=min_date)
+    if max_date:
+        results = results.filter(date_signed__lte=max_date)
 
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
@@ -45,6 +50,8 @@ def contributions(request):
     donor = request.GET.get('donor')
     employer = request.GET.get('employer')
     include_memo = request.GET.get('include_memo')
+    min_date = request.GET.get('min_date')
+    max_date = request.GET.get('max_date')
 
     results = ScheduleA.objects.filter(active=True)
     if not include_memo:
@@ -57,6 +64,10 @@ def contributions(request):
     if donor:
         query = SearchQuery(donor)
         results = results.filter(name_search=query)
+    if min_date:
+        results = results.filter(contribution_date__gte=min_date)
+    if max_date:
+        results = results.filter(contribution_date__lte=max_date)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
@@ -92,6 +103,8 @@ def expenditures(request):
     recipient = request.GET.get('recipient')
     purpose = request.GET.get('purpose')
     include_memo = request.GET.get('include_memo')
+    min_date = request.GET.get('min_date')
+    max_date = request.GET.get('max_date')
 
     results = ScheduleB.objects.filter(active=True)
     if not include_memo:
@@ -104,6 +117,10 @@ def expenditures(request):
     if recipient:
         query = SearchQuery(recipient)
         results = results.filter(name_search=query)
+    if min_date:
+        results = results.filter(expenditure_date__gte=min_date)
+    if max_date:
+        results = results.filter(expenditure_date__lte=max_date)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
@@ -139,6 +156,8 @@ def ies(request):
     candidate = request.GET.get('candidate')
     state = request.GET.get('state')
     district = request.GET.get('district')
+    min_date = request.GET.get('min_date')
+    max_date = request.GET.get('max_date')
 
     results = ScheduleE.objects.filter(active=True)
     if filing_id:
@@ -157,6 +176,10 @@ def ies(request):
     if district:
         district = district.zfill(2)
         results = results.filter(candidate_district=district)
+    if min_date:
+        results = results.filter(expenditure_date__gte=min_date)
+    if max_date:
+        results = results.filter(expenditure_date__lte=max_date)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
