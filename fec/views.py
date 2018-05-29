@@ -14,7 +14,7 @@ def index(request):
 
 def filings(request):
     form = FilingForm(request.GET)
-    results = Filing.objects.filter(active=True).order_by('-created')
+    results = Filing.objects.filter(active=True)
     
     comm = request.GET.get('committee')
     form_type = request.GET.get('form_type')
@@ -35,6 +35,7 @@ def filings(request):
     if max_date:
         results = results.filter(date_signed__lte=max_date)
 
+    results.order_by('-created')
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
