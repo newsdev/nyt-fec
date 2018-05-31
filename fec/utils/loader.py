@@ -3,14 +3,20 @@ import datetime
 import os
 import requests
 import csv
-import process_filing
 import time
 import traceback
 import sys
 import urllib3
+import lxml
 from decimal import Decimal
+
+from bs4 import BeautifulSoup
+
+import process_filing #this is from fec2json
+
 from fec.models import *
 from django.conf import settings
+
 
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
@@ -55,6 +61,30 @@ def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
             if evaluate_filing(log, f):
                 filings.append(f['file_number'])
 
+    return filings
+
+def filing_list_from_rss(log):
+    #backup scraper if api craps out. Will get whatever is
+    #currently in the rss feed, so no dates. We should probably
+    #run this occasionally on filing nights.
+    http = urllib3.PoolManager()
+    response = http.request('GET', 'http://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL')
+    soup = BeautifulSoup(response.data, "lxml")
+    items = soup.findAll('item')
+    filings = []
+    for item in items:
+        #make a dictionary that will match what we would have gotten from the api
+        filing = {}
+        filing_info = item.find('description').text
+        filing_info_list = filing_info.split("CommitteeId")[1].split('|')
+        filing['committee_id'] = filing_info_list[0].replace(":","").strip()
+        filing['file_number'] = filing_info_list[1].replace("FilingId:","").strip()
+        filing['form_type'] = filing_info_list[2].replace("FormType:","").strip()
+        coverage_through = filing_info_list[4].replace('CoverageThrough:','').strip()
+        filing['coverage_end_date'] = coverage_through[6:]+coverage_through[0:2]+coverage_through[3:5]
+
+        if evaluate_filing(log, filing):
+            filings.append(filing['file_number'])
     return filings
 
 def evaluate_filing(log, filing):

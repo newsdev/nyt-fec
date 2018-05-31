@@ -1,5 +1,6 @@
 Django==2.0.1
 psycopg2
+beautifulsoup4==4.6.0
 boto
 boto3
 django-storages
@@ -7,4 +8,6 @@ djangorestframework
 django-pure-pagination
 django-localflavor
 -e git+https://github.com/newsdev/fec2json.git#egg=fec2json
+lxml==4.2.1
 requests
+
