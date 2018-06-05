@@ -35,7 +35,7 @@ def filings(request):
     if max_date:
         results = results.filter(date_signed__lte=max_date)
 
-    results.order_by('-created')
+    results = results.order_by('-created')
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
