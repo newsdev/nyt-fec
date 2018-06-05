@@ -22,6 +22,7 @@ def filings(request):
     exclude_amendments = request.GET.get('exclude_amendments')
     min_date = request.GET.get('min_date')
     max_date = request.GET.get('max_date')
+    sort_order = request.GET.get('sort_order', '-created')
     if comm:
         results = results.filter(committee_name__icontains=comm)
     if form_type:
@@ -34,8 +35,9 @@ def filings(request):
         results = results.filter(date_signed__gte=min_date)
     if max_date:
         results = results.filter(date_signed__lte=max_date)
+    if sort_order and sort_order.strip('-') in [f.name for f in Filing._meta.get_fields()]:
+        results = results.order_by(sort_order)
 
-    results = results.order_by('-created')
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
