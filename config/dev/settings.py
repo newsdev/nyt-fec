@@ -1,5 +1,7 @@
 import os
 from boto.s3.connection import ProtocolIndependentOrdinaryCallingFormat
+from datadog import initialize, api
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #this is a garbage secret key for dev, the actual key is set in env vars
@@ -122,3 +124,5 @@ MEDIA_URL = "%s/" % MEDIAFILES_LOCATION
 DEFAULT_FILE_STORAGE = 'fec.utils.custom_storages.MediaStorage'
 
 CYCLE=2018
+
+

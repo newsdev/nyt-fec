@@ -23,3 +23,19 @@ AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_BUCKET_DOMAIN', 'int.nyt.com')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'int.nyt.com')
 AWS_S3_SECURE_URLS = True
 AWS_S3_URL_PROTOCOL = 'https:'
+
+DATADOG_API_KEY = os.environ.get('DATADOG_API_KEY')
+DATADOG_APP_KEY = os.environ.get('DATADOG_APP_KEY')
+
+
+if not (DATADOG_API_KEY and DATADOG_APP_KEY):
+    print("{}: datadog credentials missing")
+try:
+    options = {
+        'api_key':DATADOG_API_KEY,
+        'app_key':DATADOG_APP_KEY
+    }
+    initialize(**options)
+except Exception as e:
+    print("{}: failed to intialize datadog")
+

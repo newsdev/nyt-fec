@@ -9,6 +9,7 @@ import sys
 import urllib3
 import lxml
 from decimal import Decimal
+from fec.utils import logging
 
 from bs4 import BeautifulSoup
 
@@ -21,7 +22,8 @@ from django.conf import settings
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 
-def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
+
+def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
     #TODO: institute an API key pool or fallback?
     api_key = os.environ.get('FEC_API_KEY')
@@ -43,7 +45,9 @@ def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
             #failed to convert respons to JSON
             fails += 1
             if fails >= max_fails:
-                log.write('Failed to download valid JSON from FEC site {} times'.format(max_fails))
+                logging.log(title="FEC download failed",
+                    text='Failed to download valid JSON from FEC site {} times'.format(max_fails),
+                    tags=["nyt-fec", "result:fail"])
                 return None
             time.sleep(waittime)
         try:
@@ -51,19 +55,21 @@ def get_filing_list(log, start_date, end_date, max_fails=10, waittime=10):
         except KeyError:
             fails += 1
             if fails >= max_fails:
-                log.write('Failed to download valid JSON from FEC site {} times'.format(max_fails))
+                logging.log(title="FEC download failed",
+                    text='Failed to download valid JSON from FEC site {} times'.format(max_fails),
+                    tags=["nyt-fec", "result:fail"])
                 return None
             time.sleep(waittime)
 
         if len(results) == 0:
             break
         for f in results:
-            if evaluate_filing(log, f):
+            if evaluate_filing(f):
                 filings.append(f['file_number'])
 
     return filings
 
-def filing_list_from_rss(log):
+def filing_list_from_rss():
     #backup scraper if api craps out. Will get whatever is
     #currently in the rss feed, so no dates. We should probably
     #run this occasionally on filing nights.
@@ -83,11 +89,11 @@ def filing_list_from_rss(log):
         coverage_through = filing_info_list[4].replace('CoverageThrough:','').strip()
         filing['coverage_end_date'] = coverage_through[6:]+coverage_through[0:2]+coverage_through[3:5]
 
-        if evaluate_filing(log, filing):
+        if evaluate_filing(filing):
             filings.append(filing['file_number'])
     return filings
 
-def evaluate_filing(log, filing):
+def evaluate_filing(filing):
     #determines whether filings in the API should be downloaded
     filing_id = filing['file_number']
 
@@ -132,7 +138,7 @@ def evaluate_filing(log, filing):
     return True
 
 
-def download_filings(log, filings, filing_dir="filings/"):
+def download_filings(filings, filing_dir="filings/"):
     #takes a list of filing ids, downloads the files
     http = urllib3.PoolManager()
     existing_filings = os.listdir(filing_dir)
@@ -142,12 +148,12 @@ def download_filings(log, filings, filing_dir="filings/"):
         if filename not in existing_filings:
             file_url = 'http://docquery.fec.gov/csv/{}/{}.csv'.format(str(filing)[-3:],filing)
             if os.path.isfile(filename):
-                log.write("we already have filing {} downloaded\n".format(filing))
+                sys.stdout.write("we already have filing {} downloaded\n".format(filing))
             else:
                 response = http.request('GET', file_url)
                 with open(filename,'wb') as f:
                     f.write(response.data)
-                log.write('downloaded {}\n'.format(filing))
+                sys.stdout.write('downloaded {}\n'.format(filing))
                 #os.system('curl -o {} {}'.format(filename, file_url))
 
 def load_itemizations(sked_model, skeds, debug=False):
@@ -212,7 +218,7 @@ def convert_refund_to_skeda(line):
     
     return skeda_dict
 
-def clean_filing_fields(log, processed_filing, filing_fieldnames):
+def clean_filing_fields(processed_filing, filing_fieldnames):
     #check whether the filing requires adding odd-year totals
     odd_filing = None
     addons = {}
@@ -238,20 +244,19 @@ def clean_filing_fields(log, processed_filing, filing_fieldnames):
 
         if key in filing_fieldnames:
             if addons.get(key):
-                log.write('adding last odd cycle total for {}\n'.format(key))
+                sys.stdout.write('adding last odd cycle total for {}\n'.format(key))
                 v = Decimal(v) + addons.get(key, Decimal(0))
             clean_filing[key] = v
 
         else:
             pass
-            #log.write('dropping key {}\n'.format(k))
     return clean_filing
 
 def is_even_year(filing):
     try:
         year = int(filing['coverage_through_date'][0:4])
     except:
-        log.write('Could not find coverage date for filing {}, not fixing sums\n'.format(filing['filing_id']))
+        sys.stdout.write('Could not find coverage date for filing {}, not fixing sums\n'.format(filing['filing_id']))
         return
     if year % 2 == 0:
         return True
@@ -263,22 +268,19 @@ def last_odd_filing(filing):
     return committee_filings[0]
 
 
-def evaluate_filing_file(log, filename, filing_id):
+def evaluate_filing_file(filename, filing_id):
     with open(filename, "r") as filing_csv:
         #pop each filing open, check the filing type, and add to queue if we want this one
         reader = csv.reader(filing_csv)
         try:
             next(reader)
         except:
-            #log.write("filing {} has no lines.\n".format(filing_id))
             return False
         form_line = next(reader)
         if form_line[0].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
-            #log.write("filing {} is not in {}.\n".format(filing_id, ACCEPTABLE_FORMS))
             create_or_update_filing_status(filing_id, 'REFUSED')
             return False
         if form_line[1] in BAD_COMMITTEES:
-            #log.write("filing {} is from an unacceptable committee {}.\n".format(filing_id, BAD_COMMITTEES))
             create_or_update_filing_status(filing_id, 'REFUSED')
             return False
 
@@ -296,14 +298,12 @@ def evaluate_filing_file(log, filename, filing_id):
             return True
         if filings[0].status == 'PROCESSING':
             #alert, but do not delete or reload.
-            #log.write('Filing {} is processing. If this goes on for a long time, it might have failed silently, so check it out.'.format(filing_id))
             return False
 
         #if we get here, a filing exists, it's not 'failed' or 'processing' so we should not load
-        #log.write("filing {} has already been loaded.\n".format(filing_id))
         return False
 
-def load_filing(log, filing, filename, filing_fieldnames):
+def load_filing(filing, filename, filing_fieldnames):
     #returns boolean depending on whether filing was loaded
     
     
@@ -312,16 +312,18 @@ def load_filing(log, filing, filename, filing_fieldnames):
     filing_matches = Filing.objects.filter(filing_id=filing)
     if len(filing_matches) == 1:
         if filing_matches[0].status != "FAILED":
-            log.write('filing {} already exists\n'.format(filing))
+            sys.stdout.write('filing {} already exists\n'.format(filing))
             return False
         else:
-            log.write("Reloading {}, it failed perviously\n".format(filing))
+            sys.stdout.write("Reloading {}, it failed perviously\n".format(filing))
     
     #filing does not exist or it failed previously
     try:
         filing_dict = process_filing.process_electronic_filing(filename)
     except Exception as e:
-        log.write("fec2json failed {} {}\n".format(filing, e))
+        logging.log(title="fec2json failed",
+                    text="fec2json failed {} {}".format(filing, e),
+                    tags=["nyt-fec", "result:fail"])
         return False
 
     #do not load filings outside of this cycle (these will likely be amendments of old filings)
@@ -335,18 +337,25 @@ def load_filing(log, filing, filename, filing_fieldnames):
         else:
             acceptable_years = [cycle, cycle-1]
         if int(coverage_end_year) not in acceptable_years:
-            log.write('Covered through {}, not importing\n'.format(coverage_end))
+            sys.stdout.write('Covered through {}, not importing\n'.format(coverage_end))
             create_or_update_filing_status(filing, 'REFUSED')
             return False
 
     #deal with amended filings
     if filing_dict['amendment']:
+
+        #oy, one filer really likes semi-colons.
+        if filing_dict.get('amends_filing'):
+            filing_dict['amends_filing'] = filing_dict['amends_filing'].replace(';','')
         try:
             amends_filing_str = filing_dict['amends_filing']
+            print(amends_filing_str)
             amends_filing = int(amends_filing_str)
         except ValueError:
             #should be a warning or possibly critical
-            log.write('Invalid amendment number {} for filing {}, creating filing and marking as \n'.format(filing_dict['amends_filing'],filing))
+            logging.log(title="Filing {} Failed".format(filing_id),
+                    text='Invalid amendment number {} for filing {}, creating filing and marking as FAILED\n'.format(filing_dict['amends_filing'],filing),
+                    tags=["nyt-fec", "result:fail"])
             filing_obj = Filing.objects.create(filing_id=filing, status='FAILED')
             filing_obj.save()
             return False
@@ -354,7 +363,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
             try:
                 amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
             except IndexError:
-                log.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
+                sys.stdout.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
             else:
                 amended_filing.active = False
                 amended_filing.status = 'SUPERSEDED'
@@ -374,7 +383,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
         covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
         covered_transactions.update(active=False, status='COVERED')
 
-    clean_filing_dict = clean_filing_fields(log,filing_dict, filing_fieldnames)
+    clean_filing_dict = clean_filing_fields(filing_dict, filing_fieldnames)
     clean_filing_dict['filing_id'] = filing
     clean_filing_dict['filer_id'] = filing_dict['filer_committee_id_number']
     
@@ -406,7 +415,7 @@ def load_filing(log, filing, filename, filing_fieldnames):
 
         comm = Committee.objects.filter(fec_id=filing_dict['filer_committee_id_number']).update(**committee)
     except:
-        log.write('failed to update committee\n')
+        sys.stdout.write('failed to update committee\n')
 
     #add itemizations - eventually we're going to need to bulk insert here
     #skedA's
@@ -421,9 +430,9 @@ def load_filing(log, filing, filename, filing_fieldnames):
                 schb_count = load_itemizations(ScheduleB, filing_dict['itemizations']['SchB'])
             if 'SchE' in filing_dict['itemizations']:
                 sche_count = load_itemizations(ScheduleE, filing_dict['itemizations']['SchE'])
-        log.write("inserted {} schedule A's\n".format(scha_count))
-        log.write("inserted {} schedule B's\n".format(schb_count))
-        log.write("inserted {} schedule E's\n".format(sche_count))
+        sys.stdout.write("inserted {} schedule A's\n".format(scha_count))
+        sys.stdout.write("inserted {} schedule B's\n".format(schb_count))
+        sys.stdout.write("inserted {} schedule E's\n".format(sche_count))
     except:
         #something failed in the transaction loading, keep the filing as failed
         #but remove the itemizations
@@ -433,10 +442,12 @@ def load_filing(log, filing, filename, filing_fieldnames):
         ScheduleA.objects.filter(filing_id=filing).delete()
         ScheduleB.objects.filter(filing_id=filing).delete()
         ScheduleE.objects.filter(filing_id=filing).delete()
-        log.write('Something failed in itemizations, marking {} as FAILED\n'.format(filing))
+        logging.log(title="Itemization load failed",
+                    text='Something failed in itemizations, marking {} as FAILED'.format(filing),
+                    tags=["nyt-fec", "result:fail"])
         return False
 
-    log.write('Marking {} as ACTIVE\n'.format(filing))
+    sys.stdout.write('Marking {} as ACTIVE\n'.format(filing))
     filing_obj.status='ACTIVE'
     filing_obj.save()
     create_or_update_filing_status(filing, 'SUCCESS')
@@ -453,27 +464,41 @@ def create_or_update_filing_status(filing_id, status):
         fs.save()    
 
 
-def load_filings(log, filing_dir):
+def load_filings(filing_dir):
+
+    
     filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
 
     filing_csvs = sorted(os.listdir(filing_dir))
-
+    filings_loaded = 0
     for filename in filing_csvs:
         filing_id = filename.split(".")[0]
+        if filename[0] == ".":
+            continue
         try:
             int(filing_id)
         except:
-            log.write('did not recognize filing {}'.format(filename))
+            logging.log(title="Bad FEC filename",
+                    text='did not recognize filing {}'.format(filename),
+                    tags=["nyt-fec", "result:warn"])
             continue
 
         full_filename = "{}{}".format(filing_dir, filename)
         
-        if not evaluate_filing_file(log, full_filename, filing_id):
+        if not evaluate_filing_file(full_filename, filing_id):
             continue
                 
-        log.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing_id))
+        sys.stdout.write("-------------------\n{}: Started filing {}\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing_id))
         
 
-        if load_filing(log, filing_id, full_filename, filing_fieldnames):
+        if load_filing(filing_id, full_filename, filing_fieldnames):
 
-            log.write("{}: Finished filing {}, SUCCESS!\n".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), filing_id))
+            logging.log(title="Filing {} loaded".format(filing_id),
+                    text='filing {} successfully loaded'.format(filing_id),
+                    tags=["nyt-fec", "result:success"])
+
+            filings_loaded += 1
+
+    logging.log(title="FEC scrape completed".format(filing_id),
+                    text='{} filings successfully loaded'.format(filings_loaded),
+                    tags=["nyt-fec", "result:success"])

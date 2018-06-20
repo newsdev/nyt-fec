@@ -25,9 +25,6 @@ class Command(BaseCommand):
         parser.add_argument('--repeat-interval',
             dest='repeat-interval',
             help='Number of minutes before rerunning the command. If not specified, just run once. This is to make it easy to daemonize this command locally if needed')
-        parser.add_argument('--logfile',
-            dest='logfile',
-            help='File to log to, otherwise just log to console')
         parser.add_argument('--filing_dir',
             dest='filing_dir',
             help='where to save and read filings from')
@@ -49,12 +46,6 @@ class Command(BaseCommand):
             repeat_interval = int(options['repeat-interval'])
         else:
             repeat_interval = None
-        if options['logfile']:
-            logfile = options['logfile']
-            log = open(logfile, 'a')
-        else:
-            logfile = None
-            log = sys.stdout
         if options['filing_dir']:
             filing_dir = options['filing_dir']
         else:
@@ -63,24 +54,18 @@ class Command(BaseCommand):
         while True:
             print("looking for filings for period {}-{}".format(start_date, end_date))
             #keep looping if an interval is provided, this is mostly for testing
-            filings = loader.get_filing_list(log, start_date, end_date)
+            filings = loader.get_filing_list(start_date, end_date)
             if not filings:
                 print("failed to find any filings for period {}-{}".format(start_date, end_date))
-            else:
-                loader.download_filings(log, filings, filing_dir)
-                loader.load_filings(log, filing_dir)
+            
+            loader.download_filings(filings, filing_dir)
+            loader.load_filings(filing_dir)
 
-            if logfile:
-                log.close()
             if repeat_interval:
                 time.sleep(repeat_interval)
             else:
                 break
 
-
-
-            if logfile:
-                log.close()
             if repeat_interval:
                 time.sleep(repeat_interval)
             else:
