@@ -15,7 +15,9 @@ class ScheduleAAdmin(admin.ModelAdmin):
                     'contribution_date_formatted',
                     'form_type',
                     'formatted_amount',
+                    'donor'
                     ]
+    list_editable = ['donor']
     readonly_fields = ['committee_name',
                     'contributor_name',
                     'contributor_suffix',
