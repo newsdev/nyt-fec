@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+<h1> Filing Status </h1>
+<h3> for debugging and QA </h3>
+
+<table class="table">
+    <tr>
+        <th> Filing number </th>
+        <th> Status </th>
+        <th> Status create time </th>
+        <th> Status update time </th>
+    </tr>
+
+    {% for f in filings %}
+    <tr>
+        <td> {{ f.filing_id }} </td>
+        <td> {{ f.status }} </td>
+        <td> {{ f.created }} </td>
+        <td> {{ f.updated }} </td>
+    </tr>
+    {%endfor%}
+</table>
+
+{% endblock %}
