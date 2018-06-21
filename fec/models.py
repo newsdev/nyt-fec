@@ -244,9 +244,11 @@ class Donor(BaseModel):
     def contribution_total(self):
         try:
             amount = self.schedulea_set.aggregate(Sum('contribution_amount'))['contribution_amount__sum']
-            return '${:,.2f}'.format(amount)
+            if amount:
+                return amount
+            return 0
         except:
-            return
+            return 0
 
     def __str__(self):
         return self.nyt_name

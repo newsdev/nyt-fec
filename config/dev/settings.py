@@ -125,4 +125,5 @@ DEFAULT_FILE_STORAGE = 'fec.utils.custom_storages.MediaStorage'
 
 CYCLE=2018
 
-
+#contact email address for the person/team currently responsible for the app.
+CONTACT = os.environ.get('CONTACT')

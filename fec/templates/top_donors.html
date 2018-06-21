@@ -5,6 +5,7 @@
 {% block content %}
 
 <h2> Top Donors </h2>
+<h5> Includes only contributions that have been manually matched to a donor. Before using these numbers please contact {{contact}}</h5>
 <table class="table">
     <tr>
         <th> Name </th>
@@ -16,7 +17,13 @@
     <tr>
         <td> <a href="{%url 'donor_details' result.id %}">{{result.nyt_name}}</a> </td>
         <td> {{result.nyt_employer}} </td>
-        <td> {{result.contribution_total}} </td>
+        <td>
+        {%if result.contribution_total > 0 %}
+             ${{result.contribution_total|floatformat:2|intcomma}}
+        {%else%}
+            No matched contributions
+        {%endif%}
+        </td>
     </tr>
     {% endfor %}
 </table>

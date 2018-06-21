@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.db.models import Q, Sum
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.conf import settings
 
 from fec.models import *
 from fec.forms import *
@@ -224,7 +225,7 @@ def top_donors(request):
     paginator = Paginator(donors, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-    return render(request, 'top_donors.html', {'results':results})
+    return render(request, 'top_donors.html', {'results':results, 'contact':settings.CONTACT})
 
 
 def donor_details(request, donor_id):
