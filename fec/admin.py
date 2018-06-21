@@ -11,6 +11,8 @@ class ScheduleAAdmin(admin.ModelAdmin):
 
     ordering = ['-contribution_amount']
     list_display = ['contributor_name',
+                    'contributor_employer',
+                    'contributor_occupation',
                     'committee_name',
                     'contribution_date_formatted',
                     'form_type',
