@@ -31,6 +31,12 @@ class ScheduleAAdmin(admin.ModelAdmin):
                     'contribution_date_formatted'
                     ]
     autocomplete_fields = ['donor']
+    search_fields = ['contributor_first_name',
+                    'contributor_last_name',
+                    'contributor_organization_name',
+                    'form_type',
+                    'filer_committee_id_number',
+                    'filing_id']
     fields = readonly_fields+autocomplete_fields
 
 
