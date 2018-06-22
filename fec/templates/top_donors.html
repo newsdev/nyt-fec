@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load admin_urls %}
 
 
 {% block content %}
@@ -11,6 +12,7 @@
         <th> Name </th>
         <th> Employer </th>
         <th> Contributions total </th>
+        <th></th>
 
     </tr>
     {% for result in results %}
@@ -24,6 +26,7 @@
             No matched contributions
         {%endif%}
         </td>
+        <td> <a href="{% url opts|admin_urlname:'change' result.id%}">Edit donor</a></td>
     </tr>
     {% endfor %}
 </table>

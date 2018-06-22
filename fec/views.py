@@ -225,7 +225,8 @@ def top_donors(request):
     paginator = Paginator(donors, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-    return render(request, 'top_donors.html', {'results':results, 'contact':settings.CONTACT})
+    opts = Donor._meta
+    return render(request, 'top_donors.html', {'results':results, 'contact':settings.CONTACT, 'opts':opts})
 
 
 def donor_details(request, donor_id):
