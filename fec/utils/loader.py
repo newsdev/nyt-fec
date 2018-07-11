@@ -218,6 +218,37 @@ def convert_refund_to_skeda(line):
     
     return skeda_dict
 
+def reassign_standardized_donors(filing_id, amended_id):
+    #find all skeda's with donors from the amended filing
+    #that we're about to deactivate
+    matched_transactions = ScheduleA.objects.filter(filing_id=amended_id).exclude(donor=None)
+    for transaction in matched_transactions:
+        transaction_id = transaction.transaction_id
+        contributor_last_name = transaction.contributor_last_name
+        new_trans = ScheduleA.objects.filter(transaction_id=transaction_id, filing_id=filing_id)
+        if len(new_trans) == 0:
+            logging.log(title="donor reassignment issue",
+                    text="filing {} was amended by filing {} and no transaction could be found for donor reassigment for transaction id {}".format(amended_id, filing_id, transaction_id),
+                    tags=["nyt-fec", "result:warning"])
+            continue
+        if len(new_trans) > 1:
+            logging.log(title="donor reassignment issue",
+                    text="filing {} was amended by filing {} and multiple transaction matches were found for {}".format(amended_id, filing_id, transaction_id),
+                    tags=["nyt-fec", "result:warning"])
+            continue
+        new_trans = new_trans[0]
+        if new_trans.contributor_last_name != contributor_last_name:
+            logging.log(title="donor reassignment issue",
+                    text="Want to reassign transaction {} from filing {} to filing {} but last names mismatch: {}/{}".format(transaction_id, amended_id, filing_id, contributor_last_name, new_trans.contributor_last_name),    
+                    tags=["nyt-fec", "result:warning"])
+            continue
+
+        new_trans.donor = transaction.donor
+        new_trans.save()
+        transaction.donor = None
+        transaction.save()
+
+
 def clean_filing_fields(processed_filing, filing_fieldnames):
     #check whether the filing requires adding odd-year totals
     odd_filing = None
@@ -371,6 +402,7 @@ def load_filing(filing, filename, filing_fieldnames):
                 ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
                 ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
                 ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                reassign_standardized_donors(filing, amends_filing)
 
     if filing_dict['form_type'] in ['F3','F3X','F3P']:
         #could be a periodic, so see if there are covered forms that need to be deactivated
