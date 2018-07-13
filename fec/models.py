@@ -239,6 +239,8 @@ class Donor(BaseModel):
     nyt_employer = models.CharField(max_length=255, null=True, blank=True)
     nyt_occupation = models.CharField(max_length=255, null=True, blank=True)
     nyt_note = models.TextField(null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
+    state = models.CharField(max_length=255, null=True, blank=True)
 
     @property
     def contribution_total(self):
