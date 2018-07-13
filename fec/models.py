@@ -244,7 +244,7 @@ class Donor(BaseModel):
     contribution_total = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     
     def save(self, *args, **kwargs):
-        self.contribution_total = self.schedulea_set.aggregate(Sum('contribution_amount'))['contribution_amount__sum']
+        self.contribution_total = self.schedulea_set.filter(active=True).aggregate(Sum('contribution_amount'))['contribution_amount__sum']
         if not self.contribution_total:
             self.contribution_total = 0
         super().save(*args, **kwargs)
