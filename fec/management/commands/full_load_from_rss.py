@@ -40,7 +40,7 @@ class Command(BaseCommand):
         while True:
             print("Pulling filings from RSS feed")
             #keep looping if an interval is provided, this is mostly for testing
-            filings = loader.filing_list_from_rss(log)
+            filings = loader.filing_list_from_rss()
             if not filings:
                 print("failed to find any new filings in the RSS feed")
             else:
