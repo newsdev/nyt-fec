@@ -396,13 +396,18 @@ def load_filing(filing, filename, filing_fieldnames):
             except IndexError:
                 sys.stdout.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
             else:
-                amended_filing.active = False
-                amended_filing.status = 'SUPERSEDED'
-                amended_filing.save()
-                ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-                ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-                ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-                reassign_standardized_donors(filing, amends_filing)
+                #if there are filings that were amended by the amended filing
+                #they also have to be deactivated, so look for them.
+                other_amended_filings = Filing.objects.filter(amends_filing=amended_filing.filing_id)
+                amended_filings = [f for f in other_amended_filings] + [amended_filing]
+                for amended_filing in amended_filings:
+                    amended_filing.active = False
+                    amended_filing.status = 'SUPERSEDED'
+                    amended_filing.save()
+                    ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                    ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                    ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
+                    reassign_standardized_donors(filing, amends_filing)
 
     if filing_dict['form_type'] in ['F3','F3X','F3P']:
         #could be a periodic, so see if there are covered forms that need to be deactivated
