@@ -334,7 +334,7 @@ class ScheduleA(Transaction):
     reference_code = models.CharField(max_length=255, null=True, blank=True)
     name_search = SearchVectorField(null=True)
     occupation_search = SearchVectorField(null=True)
-    donor = models.ForeignKey(Donor, null=True, on_delete=models.SET_NULL)
+    donor = models.ForeignKey(Donor, null=True, blank=True, on_delete=models.SET_NULL)
     
     """
     these search fields require triggers. Please see migration 0015 which I hand-edited
