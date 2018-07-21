@@ -233,7 +233,7 @@ def donor_details(request, donor_id):
     context = {}
     donor = Donor.objects.get(id=donor_id)
     context['donor'] = donor
-    context['contribs'] = donor.schedulea_set.order_by('-contribution_amount')
+    context['contribs'] = donor.schedulea_set.filter(active=True).order_by('-contribution_amount')
     return render(request, 'donor_details.html', context)
 
 def filing_status(request, status):
