@@ -9,15 +9,22 @@ class ScheduleAAdmin(admin.ModelAdmin):
     def formatted_amount(self, obj):
         return '${:,.2f}'.format(obj.contribution_amount)
 
+    def employer_occupation(self, obj):
+        if obj.contributor_occupation and obj.contributor_employer:
+            return "{} | {}".format(obj.contributor_employer,obj.contributor_occupation)
+        if obj.contributor_occupation:
+            return obj.contributor_occupation
+        if obj.contributor_employer:
+            return obj.contributor_employer
+        return ""
+
     ordering = ['-contribution_amount']
     list_display = ['contributor_name',
-                    'contributor_employer',
-                    'contributor_occupation',
+                    'donor',
+                    'employer_occupation',
                     'committee_name',
                     'contribution_date_formatted',
-                    'form_type',
                     'formatted_amount',
-                    'donor'
                     ]
     list_editable = ['donor']
     readonly_fields = ['committee_name',
