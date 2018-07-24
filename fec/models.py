@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models import signals
+from django.dispatch import receiver
 from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from django.db.models import Sum
@@ -334,6 +336,7 @@ class ScheduleA(Transaction):
     reference_code = models.CharField(max_length=255, null=True, blank=True)
     name_search = SearchVectorField(null=True)
     occupation_search = SearchVectorField(null=True)
+    old_donor_id = models.CharField(max_length=255, null=True, blank=True, help_text="terrible hack for editing donor totals, do not manually edit!")
     donor = models.ForeignKey(Donor, null=True, blank=True, on_delete=models.SET_NULL)
     
     """
@@ -373,6 +376,27 @@ class ScheduleA(Transaction):
             [GinIndex(fields=['name_search']),
             models.Index(fields=['contribution_amount']),
             GinIndex(fields=['occupation_search'])])
+
+    def save(self, *args, **kwargs):
+        #all of this is to update totals on donors
+        old_donor = None
+        print(self.old_donor_id)
+        print(self.donor_id)
+        if self.old_donor_id and int(self.old_donor_id) != self.donor_id:
+            try:
+                old_donor = Donor.objects.get(id=self.old_donor_id)
+            except:
+                #maybe we deleted the donor? we should not fail to save because of this
+                pass
+        if self.donor_id:
+            self.old_donor_id = str(self.donor_id)
+        else:
+            self.old_donor_id = None
+        super().save(*args, **kwargs)
+        if old_donor:
+            old_donor.save()
+        if self.donor:
+            self.donor.save()
 
 class ScheduleB(Transaction):
     payee_organization_name = models.CharField(max_length=255, null=True, blank=True)
