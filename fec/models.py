@@ -380,8 +380,6 @@ class ScheduleA(Transaction):
     def save(self, *args, **kwargs):
         #all of this is to update totals on donors
         old_donor = None
-        print(self.old_donor_id)
-        print(self.donor_id)
         if self.old_donor_id and int(self.old_donor_id) != self.donor_id:
             try:
                 old_donor = Donor.objects.get(id=self.old_donor_id)

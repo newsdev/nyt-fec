@@ -380,7 +380,6 @@ def load_filing(filing, filename, filing_fieldnames):
             filing_dict['amends_filing'] = filing_dict['amends_filing'].replace(';','')
         try:
             amends_filing_str = filing_dict['amends_filing']
-            print(amends_filing_str)
             amends_filing = int(amends_filing_str)
         except ValueError:
             #should be a warning or possibly critical
