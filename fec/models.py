@@ -224,11 +224,20 @@ class Filing(BaseModel):
     def url(self):
         return "http://docquery.fec.gov/cgi-bin/forms/{}/{}/".format(self.filer_id, self.filing_id)
 
+    @property
+    def is_amendment(self):
+        if self.amends_filing:
+            return True
+        return False
+    
+
     def __str__(self):
         if self.committee_name:
             return "{} filing {}".format(self.committee_name, self.filing_id)
         else:
             return str(self.filing_id)
+
+
 
     class Meta:
         indexes = [

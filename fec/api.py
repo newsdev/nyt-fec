@@ -10,7 +10,8 @@ class FilingSerializer(serializers.ModelSerializer):
             'committee_name','period_total_receipts',
             'period_total_disbursements',
             'cash_on_hand_close_of_period',
-            'computed_ie_total_for_f24')
+            'computed_ie_total_for_f24',
+            'is_amendment','url')
 
 class FilingViewSet(viewsets.ModelViewSet):
     serializer_class = FilingSerializer
