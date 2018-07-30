@@ -53,6 +53,7 @@ def contributions(request):
     filing_id = request.GET.get('filing_id')
     donor = request.GET.get('donor')
     employer = request.GET.get('employer')
+    address = request.GET.get('address')
     include_memo = request.GET.get('include_memo')
     min_date = request.GET.get('min_date')
     max_date = request.GET.get('max_date')
@@ -68,6 +69,9 @@ def contributions(request):
     if donor:
         query = SearchQuery(donor)
         results = results.filter(name_search=query)
+    if address:
+        query = SearchQuery(address)
+        results = results.filter(address_search=query)
     if min_date:
         results = results.filter(contribution_date__gte=min_date)
     if max_date:

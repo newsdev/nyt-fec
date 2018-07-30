@@ -9,6 +9,7 @@ class ContributionForm(forms.Form):
     filing_id = forms.CharField(label='filing id', max_length=20, required=False)
     donor = forms.CharField(label='Donor name', max_length=500, required=False)
     employer = forms.CharField(label='Donor\'s employer or occupation', max_length=500, required=False)
+    address = forms.CharField(label='Donor\'s street address, city and/or zipcode', max_length=500, required=False)
     include_memo = forms.BooleanField(label='Include memo entries', required=False)
     min_date = forms.CharField(label="Min receipt date (YYYYMMDD)", required=False)
     max_date = forms.DateField(label="Max receipt date (YYYYMMDD)", required=False)

@@ -483,10 +483,19 @@ def load_filing(filing, filename, filing_fieldnames):
                     tags=["nyt-fec", "result:fail"])
         return False
 
+    #add IE total to f24s
+    if filing_obj.form == 'F24':
+        ies = ScheduleE.objects.filter(filing_id=filing, active=True)
+        filing_obj.computed_ie_total_for_f24 = sum([ie.expenditure_amount for ie in ies])
+
+
+
+
     sys.stdout.write('Marking {} as ACTIVE\n'.format(filing))
     filing_obj.status='ACTIVE'
     filing_obj.save()
     create_or_update_filing_status(filing, 'SUCCESS')
+
     return True
 
 def create_or_update_filing_status(filing_id, status):

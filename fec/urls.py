@@ -1,8 +1,17 @@
 from django.urls import include, path, re_path
 from django.contrib import admin
+from rest_framework import routers, serializers, viewsets
 from fec import views
+from fec.api import *
 
-urlpatterns = [
+router = routers.DefaultRouter()
+router.register(r'filings', FilingViewSet, base_name=Filing)
+
+
+API = [path('api/v1/', include(router.urls))]
+
+
+urlpatterns = API + [
         path('admin/', admin.site.urls),
         path('', views.index, name='index'),
         re_path(r'filings/$', views.filings, name='filings'), #we might someday want a real index but good enough for now 

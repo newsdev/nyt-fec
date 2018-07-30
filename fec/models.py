@@ -218,6 +218,7 @@ class Filing(BaseModel):
     cycle_transfers_from_nonfederal_h3 = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     cycle_transfers_to_affiliated = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
     cycle_transfers_to_other_authorized_committees = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
+    computed_ie_total_for_f24 = models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True,help_text="computed total IEs for F24s for alerting so we know if they're big enough to care about")
 
     @property
     def url(self):
@@ -336,6 +337,7 @@ class ScheduleA(Transaction):
     reference_code = models.CharField(max_length=255, null=True, blank=True)
     name_search = SearchVectorField(null=True)
     occupation_search = SearchVectorField(null=True)
+    address_search = SearchVectorField(null=True)
     old_donor_id = models.CharField(max_length=255, null=True, blank=True, help_text="terrible hack for editing donor totals, do not manually edit!")
     donor = models.ForeignKey(Donor, null=True, blank=True, on_delete=models.SET_NULL)
     
@@ -375,7 +377,8 @@ class ScheduleA(Transaction):
         indexes.extend(
             [GinIndex(fields=['name_search']),
             models.Index(fields=['contribution_amount']),
-            GinIndex(fields=['occupation_search'])])
+            GinIndex(fields=['occupation_search']),
+            GinIndex(fields=['address_search'])])
 
     def save(self, *args, **kwargs):
         #all of this is to update totals on donors
