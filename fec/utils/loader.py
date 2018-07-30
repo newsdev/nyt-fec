@@ -408,16 +408,17 @@ def load_filing(filing, filename, filing_fieldnames):
                     ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
                     reassign_standardized_donors(filing, amends_filing)
 
-    if filing_dict['form_type'] in ['F3','F3X','F3P']:
+    if filing_dict['form'] in ['F3','F3X','F3P']:
         #could be a periodic, so see if there are covered forms that need to be deactivated
-        coverage_start_date = filing_dict['coverage_start_date']
-        coverage_end_date = filing_dict['coverage_end_date']
-        covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
+        coverage_start_date = filing_dict['coverage_from_date']
+        coverage_end_date = filing_dict['coverage_through_date']
+        if coverage_start_date and coverage_end_date:
+            covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
                                                 date_signed__lte=coverage_end_date,
                                                 form='F24')
-        covered_filings.update(active=False, status='COVERED')
-        covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
-        covered_transactions.update(active=False, status='COVERED')
+            covered_filings.update(active=False, status='COVERED')
+            covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
+            covered_transactions.update(active=False, status='COVERED')
 
     clean_filing_dict = clean_filing_fields(filing_dict, filing_fieldnames)
     clean_filing_dict['filing_id'] = filing
