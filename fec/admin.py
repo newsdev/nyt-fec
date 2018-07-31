@@ -4,7 +4,7 @@ from fec.models import *
 class ScheduleAAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(form_type__in=['SA17A','SA11AI'], contribution_amount__gte=200000, active=True)
+        return qs.filter(form_type__in=['SA17A','SA11AI'], contribution_amount__gte=100000, active=True)
 
     def formatted_amount(self, obj):
         return '${:,.2f}'.format(obj.contribution_amount)
