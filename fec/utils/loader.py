@@ -415,7 +415,8 @@ def load_filing(filing, filename, filing_fieldnames):
         if coverage_start_date and coverage_end_date:
             covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
                                                 date_signed__lte=coverage_end_date,
-                                                form='F24')
+                                                form='F24',
+                                                filer_id=filing_dict['filer_committee_id_number'])
             covered_filings.update(active=False, status='COVERED')
             covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
             covered_transactions.update(active=False, status='COVERED')
