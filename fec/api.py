@@ -15,5 +15,4 @@ class FilingSerializer(serializers.ModelSerializer):
 
 class FilingViewSet(viewsets.ModelViewSet):
     serializer_class = FilingSerializer
-    queryset = Filing.objects.filter(active=True)
-    ordering_fields = ('-created')
+    queryset = Filing.objects.filter(active=True).order_by('-created')
