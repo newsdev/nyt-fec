@@ -35,7 +35,10 @@ class FilingStatus(models.Model):
     #where 'REFUSED' means we decided not to upload the filing
     #eg because it's old or a kind of filing we're not loading
     #or actblue
-
+    @property
+    def csv_url(self):
+        return 'http://docquery.fec.gov/csv/{}/{}.csv'.format(self.filing_id % 1000,self.filing_id)
+    
 class Committee(BaseModel):
     fec_id = models.CharField(max_length=10, primary_key=True)
     committee_name = models.CharField(max_length=255, blank=True, null=True)
