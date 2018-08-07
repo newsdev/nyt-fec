@@ -21,6 +21,9 @@
     <h2> Independent Expenditures total: ${{results_sum.expenditure_amount__sum|floatformat:2|intcomma}} </h2>
     This total includes only itemized expenditures.
     {% endif %} 
+    <div class="text-right">
+        <a href="{{csv_url}}">Download as CSV</a>
+    </div>
 
     </div>
 </div>

@@ -655,6 +655,66 @@ class ScheduleE(Transaction):
             return "Oppose"
         return
 
+    def export_fields():
+        return ['status',
+                'form_type',
+                'filer_committee_id_number',
+                'filing_id',
+                'transaction_id',
+                'back_reference_tran_id_number',
+                'back_reference_sched_name',
+                'entity_type',
+                'filer_id',
+                'payee_organization_name',
+                'payee_last_name',
+                'payee_first_name',
+                'payee_middle_name',
+                'payee_prefix',
+                'payee_suffix',
+                'payee_street_1',
+                'payee_street_2',
+                'payee_city',
+                'payee_state',
+                'payee_zip',
+                'election_code',
+                'election_other_description',
+                'dissemination_date',
+                'expenditure_amount',
+                'expenditure_date',
+                'calendar_y_t_d_per_election_office',
+                'expenditure_purpose_descrip',
+                'category_code',
+                'payee_cmtte_fec_id_number',
+                'support_oppose_code',
+                'candidate_id_number',
+                'candidate_last_name',
+                'candidate_first_name',
+                'candidate_middle_name',
+                'candidate_prefix',
+                'candidate_suffix',
+                'candidate_office',
+                'candidate_district',
+                'candidate_state',
+                'completing_last_name',
+                'completing_first_name',
+                'completing_middle_name',
+                'completing_prefix',
+                'completing_suffix',
+                'date_signed',
+                'memo_code',
+                'memo_text_description',
+                ]
+
+    def csv_row(self):
+        row = []
+        for f in ScheduleE.export_fields():
+            value = getattr(self, f)
+            if value is None:
+                row.append("")
+            else:
+                row.append(value)
+        return(row)
+
     class Meta(Transaction.Meta):
         indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
         indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['purpose_search']), GinIndex(fields=['candidate_search'])])

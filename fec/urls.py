@@ -20,6 +20,7 @@ urlpatterns = API + [
         re_path(r'expenditures/$', views.expenditures, name='expenditures'),
         re_path(r'expenditures_csv/$', views.expenditures_csv, name='expenditures_csv'),
         re_path(r'ies/$', views.ies, name='ies'),
+        re_path(r'ie_csv/$', views.ie_csv, name='ie_csv'),
         path('races', views.races, name='races'),
         path('top_donors', views.top_donors, name='top_donors'),
         path('donor_details/<int:donor_id>', views.donor_details, name='donor_details'),

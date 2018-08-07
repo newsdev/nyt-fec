@@ -205,11 +205,7 @@ def expenditures_csv(request):
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
     return response
 
-def ies(request):
-    form = IEForm(request.GET)
-    if not request.GET:
-        return render(request, 'ies.html', {'form': form})
-
+def get_ie_results(request):
     comm = request.GET.get('committee')
     filing_id = request.GET.get('filing_id')
     recipient = request.GET.get('recipient')
@@ -254,15 +250,40 @@ def ies(request):
     else:
         results = results.order_by(order_by)
 
+    return results
+
+def ies(request):
+    form = IEForm(request.GET)
+    if not request.GET:
+        return render(request, 'ies.html', {'form': form})
+
+    results = get_ie_results(request)
 
     results_sum = results.aggregate(Sum('expenditure_amount'))
+
+    csv_url = reverse('ie_csv') + "?"+ request.GET.urlencode()
 
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-
     
-    return render(request, 'ies.html', {'form': form, 'results':results, 'results_sum':results_sum})
+    return render(request, 'ies.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
+
+def ie_csv(request):
+    results = get_ie_results(request)
+    filename = "ScheduleE_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))
+
+    def rows():
+        yield ScheduleE.export_fields()
+        for result in results:
+            yield result.csv_row()
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows()),
+                                     content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    return response
 
 
 def races(request):
