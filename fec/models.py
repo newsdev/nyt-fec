@@ -518,6 +518,48 @@ class ScheduleB(Transaction):
         except:
             return
 
+    def export_fields():
+        return ['status',
+                    'form_type',
+                    'filer_committee_id_number',
+                    'filing_id',
+                    'transaction_id',
+                    'back_reference_tran_id_number',
+                    'back_reference_sched_name',
+                    'entity_type',
+                    'filer_id',
+                    'payee_organization_name',
+                    'payee_last_name',
+                    'payee_first_name',
+                    'payee_middle_name',
+                    'payee_prefix',
+                    'payee_suffix',
+                    'payee_street_1',
+                    'payee_street_2',
+                    'payee_city',
+                    'payee_state',
+                    'payee_zip',
+                    'election_code',
+                    'election_other_description',
+                    'expenditure_date',
+                    'expenditure_amount',
+                    'semi_annual_refunded_bundled_amt',
+                    'expenditure_purpose_descrip',
+                    'category_code',
+                    'memo_code',
+                    'memo_text_description'
+                    ]
+
+    def csv_row(self):
+        row = []
+        for f in ScheduleB.export_fields():
+            value = getattr(self, f)
+            if value is None:
+                row.append("")
+            else:
+                row.append(value)
+        return(row)
+
     class Meta(Transaction.Meta):
         indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
         indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['purpose_search'])])
