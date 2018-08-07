@@ -1,14 +1,26 @@
 import datetime
 import re
+import csv
+import time
 
 from django.shortcuts import render
 from django.db.models import Q, Sum
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.conf import settings
+from django.http import StreamingHttpResponse
+from django.urls import reverse
 
 from fec.models import *
 from fec.forms import *
+
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
 
 def index(request):
     return render(request, 'index.html')
@@ -44,11 +56,7 @@ def filings(request):
     results = paginator.get_page(page)
     return render(request, 'filings.html', {'form': form, 'results':results})
 
-def contributions(request):
-    form = ContributionForm(request.GET)
-    if not request.GET:
-        return render(request, 'contributions.html', {'form': form})
-
+def get_contribution_results(request):
     comm = request.GET.get('committee')
     filing_id = request.GET.get('filing_id')
     donor = request.GET.get('donor')
@@ -88,18 +96,42 @@ def contributions(request):
         results = results.order_by('-{}'.format(order_by))
     else:
         results = results.order_by(order_by)
+    return results
 
+def contributions(request):
+    form = ContributionForm(request.GET)
+    if not request.GET:
+        return render(request, 'contributions.html', {'form': form})
 
-    results_sum = None if include_memo else results.aggregate(Sum('contribution_amount'))
+    results = get_contribution_results(request)
+
+    results_sum = None if request.GET.get('include_memo') else results.aggregate(Sum('contribution_amount'))
+
+    csv_url = reverse('contributions_csv') + "?"+ request.GET.urlencode()
 
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
 
     
-    return render(request, 'contributions.html', {'form': form, 'results':results, 'results_sum':results_sum})
+    return render(request, 'contributions.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
 
+def contributions_csv(request):
+    form = ContributionForm(request.GET)
+    results = get_contribution_results(request)
+    filename = "ScheduleA_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))
 
+    def rows():
+        yield ScheduleA.export_fields()
+        for result in results:
+            yield result.csv_row()
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows()),
+                                     content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    return response
 
 def expenditures(request):
     form = ExpenditureForm(request.GET)

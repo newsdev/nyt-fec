@@ -21,7 +21,9 @@
     <h2> Reciepts total: ${{results_sum.contribution_amount__sum|floatformat:2|intcomma}} </h2>
     This total includes only itemized receipts.
     {% endif %} 
-
+    <div class="text-right">
+        <a href="{{csv_url}}">Download as CSV</a>
+    </div>
     </div>
 </div>
   <table class="table table-bordered table-striped">

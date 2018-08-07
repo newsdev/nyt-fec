@@ -384,6 +384,48 @@ class ScheduleA(Transaction):
         except:
             return
 
+    def export_fields():
+        return ['status',
+                    'form_type',
+                    'filer_committee_id_number',
+                    'filing_id',
+                    'transaction_id',
+                    'back_reference_tran_id_number',
+                    'back_reference_sched_name',
+                    'entity_type',
+                    'filer_id',
+                    'contributor_organization_name',
+                    'contributor_last_name',
+                    'contributor_first_name',
+                    'contributor_middle_name',
+                    'contributor_prefix',
+                    'contributor_suffix',
+                    'contributor_street_1',
+                    'contributor_street_2',
+                    'contributor_city',
+                    'contributor_state',
+                    'contributor_zip',
+                    'election_code',
+                    'election_other_description',
+                    'contribution_date',
+                    'contribution_amount',
+                    'contribution_aggregate',
+                    'contribution_purpose_descrip',
+                    'contributor_employer',
+                    'contributor_occupation',
+                    'memo_code',
+                    'memo_text_description']
+
+    def csv_row(self):
+        row = []
+        for f in ScheduleA.export_fields():
+            value = getattr(self, f)
+            if value is None:
+                row.append("")
+            else:
+                row.append(value)
+        return(row)
+
     class Meta(Transaction.Meta):
         indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
         indexes.extend(
