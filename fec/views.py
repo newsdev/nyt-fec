@@ -136,6 +136,7 @@ def get_expenditure_results(request):
     comm = request.GET.get('committee')
     filing_id = request.GET.get('filing_id')
     recipient = request.GET.get('recipient')
+    address = request.GET.get('address')
     purpose = request.GET.get('purpose')
     include_memo = request.GET.get('include_memo')
     min_date = request.GET.get('min_date')
@@ -152,6 +153,9 @@ def get_expenditure_results(request):
     if recipient:
         query = SearchQuery(recipient)
         results = results.filter(name_search=query)
+    if address:
+        query = SearchQuery(address)
+        results = results.filter(address_search=query)
     if min_date:
         results = results.filter(expenditure_date__gte=min_date)
     if max_date:

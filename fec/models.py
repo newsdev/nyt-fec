@@ -494,6 +494,8 @@ class ScheduleB(Transaction):
     reference_to_si_or_sl_system_code_that_identifies_the_account = models.CharField(max_length=255, null=True, blank=True)
     name_search = SearchVectorField(null=True)
     purpose_search = SearchVectorField(null=True)
+    address_search = SearchVectorField(null=True)
+
 
     @property
     def payee_name(self):
@@ -562,7 +564,9 @@ class ScheduleB(Transaction):
 
     class Meta(Transaction.Meta):
         indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
-        indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['purpose_search'])])
+        indexes.extend([GinIndex(fields=['name_search']),
+            GinIndex(fields=['purpose_search']),
+            GinIndex(fields=['address_search'])])
 
 
 class ScheduleE(Transaction):

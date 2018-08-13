@@ -23,6 +23,7 @@ class ExpenditureForm(forms.Form):
     filing_id = forms.CharField(label='filing id', max_length=20, required=False)
     recipient = forms.CharField(label='recipient name', max_length=500, required=False)
     purpose = forms.CharField(label='expenditure purpose', max_length=500, required=False)
+    address = forms.CharField(label='Recipient\'s street address, city and/or zipcode', max_length=500, required=False)    
     include_memo = forms.BooleanField(label='Include memo entries', required=False)
     min_date = forms.CharField(label="Min expend date (YYYYMMDD)", required=False)
     max_date = forms.DateField(label="Max expend date (YYYYMMDD)", required=False)
