@@ -4,6 +4,8 @@ import datetime
 
 from django.conf import settings
 
+DIRECTION_CHOICES = (('DESC','descending'),('ASC','ascending'))
+
 class ContributionForm(forms.Form):
     committee = forms.CharField(label='Committee name or ID', max_length=500, required=False)
     filing_id = forms.CharField(label='filing id', max_length=20, required=False)
@@ -13,6 +15,8 @@ class ContributionForm(forms.Form):
     include_memo = forms.BooleanField(label='Include memo entries', required=False)
     min_date = forms.CharField(label="Min receipt date (YYYYMMDD)", required=False)
     max_date = forms.DateField(label="Max receipt date (YYYYMMDD)", required=False)
+    order_by = forms.ChoiceField(label="Sort field", initial="Contribution Amount", choices=(('contribution_amount', 'Contribution Amount'),('contribution_date', 'Contribution Date'), ('contributor_last_name','Contributor Last Name')), required=False)
+    order_direction = forms.ChoiceField(label='Sort direction', choices=DIRECTION_CHOICES, initial='descending', required=False)
 
 class ExpenditureForm(forms.Form):
     committee = forms.CharField(label='Committee name or ID', max_length=500, required=False)
@@ -22,6 +26,8 @@ class ExpenditureForm(forms.Form):
     include_memo = forms.BooleanField(label='Include memo entries', required=False)
     min_date = forms.CharField(label="Min expend date (YYYYMMDD)", required=False)
     max_date = forms.DateField(label="Max expend date (YYYYMMDD)", required=False)
+    order_by = forms.ChoiceField(label="Sort field", initial="Expenditure Amount", choices=(('expenditure_amount', 'Expenditure Amount'),('expenditure_date', 'Expenditure Date')), required=False)
+    order_direction = forms.ChoiceField(label='Sort direction', choices=DIRECTION_CHOICES, initial='descending', required=False)
 
 class IEForm(forms.Form):
     committee = forms.CharField(label='Committee name or ID', max_length=500, required=False)
@@ -31,6 +37,9 @@ class IEForm(forms.Form):
     candidate = forms.CharField(label='candidate', max_length=500, required=False)
     min_date = forms.CharField(label="Min ie date (YYYYMMDD)", required=False)
     max_date = forms.DateField(label="Max ie date (YYYYMMDD)", required=False)
+    order_by = forms.ChoiceField(label="Sort field", initial="Expenditure Amount", choices=(('expenditure_amount', 'Expenditure Amount'),('expenditure_date', 'Expenditure Date')), required=False)
+    order_direction = forms.ChoiceField(label='Sort direction', choices=DIRECTION_CHOICES, initial='descending', required=False)
+
 
 class FilingForm(forms.Form):
     committee = forms.CharField(label='Committee name or ID', max_length=500, required=False)
