@@ -608,6 +608,7 @@ class ScheduleE(Transaction):
     date_signed = models.CharField(max_length=255, null=True, blank=True)
     memo_code = models.CharField(max_length=255, null=True, blank=True)
     memo_text_description = models.CharField(max_length=255, null=True, blank=True)
+    nyt_district = models.CharField(max_length=255, null=True, blank=True)
     name_search = SearchVectorField(null=True)
     purpose_search = SearchVectorField(null=True)
     candidate_search = SearchVectorField(null=True)

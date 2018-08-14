@@ -7,19 +7,16 @@
 <h2> Races with IEs </h2>
 <table class="table">
     <tr>
-        <th> State </th>
         <th> District </th>
         <th> Total IEs </th>
-        <th> &nbsp; </th>
         <th> &nbsp; </th>
     </tr>
     {% for race in races %}
     <tr>
-        <td> {{race.candidate_state}} </td>
-        <td> {{race.candidate_district}}</td>
+        <td> {{race.nyt_district}} </td>
         <td align="right"> ${{race.expenditure_amount__sum|floatformat:2|intcomma}}</td>
-        <td> <a href="{%url 'ies'%}?state={{race.candidate_state}}">View state IEs</a></td>
-        <td> <a href="{%url 'ies'%}?state={{race.candidate_state}}&district={{race.candidate_district}}">View district IEs</a></td>
+
+        <td> <a href="{%url 'ies'%}?nyt_district={{race.nyt_district}}">View district IEs</a></td>
     </tr>
     {% endfor %}
 </table>

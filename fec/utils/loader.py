@@ -179,6 +179,32 @@ def load_itemizations(sked_model, skeds, debug=False):
 
             if line['memo_code'] == 'X':
                 line['status'] = 'MEMO'
+            if line['form_type'].startswith('SE'):
+                nulls = ["0","00",""," "]
+                #fix the district
+                office = line['candidate_office']
+                district = line['candidate_district']
+                state = line['candidate_state']
+                office_exists = office is not None and office not in nulls
+                state_exists = state is not None and state not in nulls
+                district_exists = district is not None and district not in nulls
+                if office == "P":
+                    line['nyt_district'] = "PRESIDENT"
+                elif office_exists and state_exists and district_exists:
+                    line['nyt_district'] = "{}-{}".format(state,district)
+                elif office == 'S':
+                    if state_exists:
+                        line['nyt_district'] = "{}-SEN".format(state)
+                    else:
+                        line['nyt_district'] = "UNKNOWN"
+                elif state_exists:
+                    if state in ['AK','DE','MT','ND','SD','VT','WY']:
+                        line['nyt_district'] = "{}-AT-LARGE".format(state)
+                    else:
+                        line['nyt_district'] = "{}-HOUSE-UNKNOWN".format(state)
+                else:
+                    line['nyt_district'] = "UNKNOWN"
+
             chunk.append(sked_model(**line))
             if len(chunk) >= chunk_size:
                 sked_model.objects.bulk_create(chunk)

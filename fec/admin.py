@@ -1,6 +1,18 @@
 from django.contrib import admin
 from fec.models import *
 
+class ScheduleEAdmin(admin.ModelAdmin):
+    ordering = ['-expenditure_amount']
+    readonly_fields = ['committee_name',
+                    'expenditure_amount',
+                    'candidate_first_name',
+                    'candidate_last_name',
+                    'candidate_office',
+                    'candidate_state',
+                    'candidate_district'
+                    ]
+    fields = readonly_fields + ['nyt_district']
+
 class ScheduleAAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -51,4 +63,5 @@ class DonorAdmin(admin.ModelAdmin):
     search_fields = ['nyt_name']
 
 admin.site.register(ScheduleA, ScheduleAAdmin)
+admin.site.register(ScheduleE, ScheduleEAdmin)
 admin.site.register(Donor, DonorAdmin)

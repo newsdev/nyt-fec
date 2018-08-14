@@ -217,6 +217,7 @@ def get_ie_results(request):
     candidate = request.GET.get('candidate')
     state = request.GET.get('state')
     district = request.GET.get('district')
+    nyt_district = request.GET.get('nyt_district')
     min_date = request.GET.get('min_date')
     max_date = request.GET.get('max_date')
 
@@ -237,6 +238,8 @@ def get_ie_results(request):
     if district:
         district = district.zfill(2)
         results = results.filter(candidate_district=district)
+    if nyt_district:
+        results = results.filter(nyt_district=nyt_district)
     if min_date:
         results = results.filter(expenditure_date__gte=min_date)
     if max_date:
@@ -270,8 +273,12 @@ def ies(request):
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-    
-    return render(request, 'ies.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
+    context = {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url}
+    if request.GET.get('nyt_district'):
+        context['nyt_district'] = True
+        context['opts'] = ScheduleE._meta
+
+    return render(request, 'ies.html', context)
 
 def ie_csv(request):
     results = get_ie_results(request)
@@ -291,11 +298,11 @@ def ie_csv(request):
 
 
 def races(request):
-    races = ScheduleE.objects.filter(active=True).values('candidate_state', 'candidate_district').annotate(Sum('expenditure_amount'))
+    races = ScheduleE.objects.filter(active=True).values('nyt_district').annotate(Sum('expenditure_amount'))
     
     order_by = request.GET.get('order_by', 'expenditure_amount')
     if order_by == 'race':
-        races = races.order_by('candidate_state','candidate_district')
+        races = races.order_by('nyt_district')
     else:
         races = races.order_by('-expenditure_amount__sum')
 
