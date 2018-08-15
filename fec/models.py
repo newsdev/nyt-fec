@@ -641,9 +641,11 @@ class ScheduleE(Transaction):
 
     @property
     def candidate_name(self):
-        if self.payee_middle_name:
+        if self.candidate_middle_name:
             return ' '.join([self.candidate_first_name, self.candidate_middle_name, self.candidate_last_name])
-        return ' '.join([self.candidate_first_name, self.candidate_last_name])
+        if self.candidate_first_name and self.candidate_last_name:
+            return ' '.join([self.candidate_first_name, self.candidate_last_name])
+        return None
 
     @property
     def district(self):
