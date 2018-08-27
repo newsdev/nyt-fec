@@ -19,7 +19,7 @@ from fec.models import *
 from django.conf import settings
 
 
-ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24']
+ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24', 'F5']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 
 
@@ -161,7 +161,7 @@ def load_itemizations(sked_model, skeds, debug=False):
     sked_count = 0
     if debug:
         for line in skeds:
-            if line['memo_code'] == 'X':
+            if 'memo_code' in line and line['memo_code'] == 'X':
                 line['status'] = 'MEMO'
             sked_model.objects.create(**line)
             sked_count += 1
@@ -409,7 +409,7 @@ def load_filing(filing, filename, filing_fieldnames):
             amends_filing = int(amends_filing_str)
         except ValueError:
             #should be a warning or possibly critical
-            logging.log(title="Filing {} Failed".format(filing_id),
+            logging.log(title="Filing {} Failed".format(filing),
                     text='Invalid amendment number {} for filing {}, creating filing and marking as FAILED\n'.format(filing_dict['amends_filing'],filing),
                     tags=["nyt-fec", "result:fail"])
             filing_obj = Filing.objects.create(filing_id=filing, status='FAILED')
@@ -494,6 +494,8 @@ def load_filing(filing, filename, filing_fieldnames):
                 schb_count = load_itemizations(ScheduleB, filing_dict['itemizations']['SchB'])
             if 'SchE' in filing_dict['itemizations']:
                 sche_count = load_itemizations(ScheduleE, filing_dict['itemizations']['SchE'])
+            if 'F57' in filing_dict['itemizations']:
+                sche_count += load_itemizations(ScheduleE, filing_dict['itemizations']['F57'],debug=True)
         sys.stdout.write("inserted {} schedule A's\n".format(scha_count))
         sys.stdout.write("inserted {} schedule B's\n".format(schb_count))
         sys.stdout.write("inserted {} schedule E's\n".format(sche_count))
