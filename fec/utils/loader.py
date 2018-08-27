@@ -442,7 +442,7 @@ def load_filing(filing, filename, filing_fieldnames):
             covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
                                                 date_signed__lte=coverage_end_date,
                                                 form__in=['F24','F5'],
-                                                filer_id=filing_dict['filer_committee_id_number'])
+                                                filer_id=filing_dict['filer_committee_id_number']).exclude(filing_id=filing) #this exclude prevents the current filing from being deactivated if it's already been saved somehow
             covered_filings.update(active=False, status='COVERED')
             covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
             covered_transactions.update(active=False, status='COVERED')
