@@ -434,7 +434,7 @@ def load_filing(filing, filename, filing_fieldnames):
                     ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
                     reassign_standardized_donors(filing, amends_filing)
 
-    if filing_dict['form'] in ['F3','F3X','F3P']:
+    if filing_dict['form'] in ['F3','F3X','F3P','F5']:
         #could be a periodic, so see if there are covered forms that need to be deactivated
         coverage_start_date = filing_dict['coverage_from_date']
         coverage_end_date = filing_dict['coverage_through_date']
