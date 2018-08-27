@@ -25,8 +25,9 @@ If you don't *really* need to deploy and maintain your own standalone campaign f
     export fec_DB_NAME=nyt_dev_fec
     export fec_DB_USER=nyt_dev_fec
     export FEC_API_KEY=your-api-key```
-1. `pip install requirements.txt`
+1. `pip install -r requirements.txt`
 1. `createuser -s nyt_dev_fec `
 1. `createdb -U nyt_dev_fec nyt_dev_fec`
+1. `add2virtualenv . && add2virtualenv config && add2virtualenv fec`
 1. `django-admin migrate`
 
