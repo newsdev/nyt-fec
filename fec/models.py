@@ -24,7 +24,8 @@ STATUS_CHOICES = (('ACTIVE', 'active'),
                     ('COVERED', 'covered by periodic'),
                     ('MEMO', 'memo'),
                     ('PROCESSING','processing'),
-                    ('FAILED','failed'))
+                    ('FAILED','failed'),
+                    ('WRONG_CYCLE','wrong cycle'))
 
 class FilingStatus(models.Model):
     created = models.DateTimeField(default=timezone.now)
