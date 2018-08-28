@@ -419,6 +419,13 @@ def load_filing(filing, filename, filing_fieldnames):
             try:
                 amended_filing = Filing.objects.filter(filing_id=amends_filing)[0]
             except IndexError:
+                #if it's an F24 or F5, which don't always have coverage dates,
+                #it is probably an amendment of an out-of-cycle filing
+                #so do not load it
+                if filing_dict['form'] in ['F24', 'F5']:
+                    sys.stdout.write('Filing {} is an amended {} with no base. Probably from an old cycle. Not loading\n'.format(filing, filing_dict['form']))
+                    create_or_update_filing_status(filing, 'REFUSED')
+                    return False
                 sys.stdout.write("could not find filing {}, which was amended by {}, so not deactivating any transactions\n".format(amends_filing, filing))
             else:
                 #if there are filings that were amended by the amended filing
