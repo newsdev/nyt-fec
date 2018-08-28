@@ -330,3 +330,13 @@ def filing_status(request, status):
     status = status.upper()
     context['filings'] = FilingStatus.objects.filter(status=status).order_by('-created')
     return render(request, 'filing_status.html', context)
+
+def committee(request, committee_id):
+    context = {}
+    committee = Committee.objects.get(fec_id=committee_id)
+    context['committee'] = committee
+    periodic = Filing.objects.filter(filer_id=committee_id,active=True,form__startswith='F3').order_by('-coverage_through_date')
+    context['periodic'] = periodic
+    context['non_periodic'] = Filing.objects.filter(filer_id=committee_id,active=True,form__in=['F24','F5']).order_by('-date_signed')
+    context['most_recent_periodic'] = periodic[0]
+    return render(request, 'committee.html', context)
