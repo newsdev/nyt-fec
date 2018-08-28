@@ -27,7 +27,7 @@
     </tr>
     {% for filing in results %}
     <tr>
-        <td> {{filing.committee_name}} </td>
+        <td> <a href="{%url 'committee' filing.filer_id%}">{{filing.committee_name}}</a> </td>
         <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
         <td> {{filing.created}} </td>
         <td> {% if filing.date_signed|length == 8 %} {{filing.date_signed|slice:"4:6"}}/{{filing.date_signed|slice:"6:8"}}/{{filing.date_signed|slice:"0:4"}} {% else %} {{filing.date_signed}}{%endif%}</td>
