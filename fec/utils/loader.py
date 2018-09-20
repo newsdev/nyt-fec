@@ -248,6 +248,8 @@ def reassign_standardized_donors(filing_id, amended_id):
     #find all skeda's with donors from the amended filing
     #that we're about to deactivate
     matched_transactions = ScheduleA.objects.filter(filing_id=amended_id).exclude(donor=None)
+    i = 0
+    print(len(matched_transactions))
     for transaction in matched_transactions:
         transaction_id = transaction.transaction_id
         contributor_last_name = transaction.contributor_last_name
@@ -273,6 +275,9 @@ def reassign_standardized_donors(filing_id, amended_id):
         new_trans.save()
         transaction.donor = None
         transaction.save()
+        i += 1
+    print("reassigned {} transactions from amended filing".format(i))
+
 
 
 def clean_filing_fields(processed_filing, filing_fieldnames):
@@ -399,7 +404,10 @@ def load_filing(filing, filename, filing_fieldnames):
             return False
 
     #deal with amended filings
+    is_amended = False
+    amends_filing = None
     if filing_dict['amendment']:
+        is_amended = True
 
         #oy, one filer really likes semi-colons.
         if filing_dict.get('amends_filing'):
@@ -439,7 +447,6 @@ def load_filing(filing, filename, filing_fieldnames):
                     ScheduleA.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
                     ScheduleB.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
                     ScheduleE.objects.filter(filing_id=amends_filing).update(active=False, status='SUPERSEDED')
-                    reassign_standardized_donors(filing, amends_filing)
 
     if filing_dict['form'] in ['F3','F3X','F3P','F5']:
         #could be a periodic, so see if there are covered forms that need to be deactivated
@@ -506,6 +513,7 @@ def load_filing(filing, filename, filing_fieldnames):
         sys.stdout.write("inserted {} schedule A's\n".format(scha_count))
         sys.stdout.write("inserted {} schedule B's\n".format(schb_count))
         sys.stdout.write("inserted {} schedule E's\n".format(sche_count))
+
     except:
         #something failed in the transaction loading, keep the filing as failed
         #but remove the itemizations
@@ -519,6 +527,9 @@ def load_filing(filing, filename, filing_fieldnames):
                     text='Something failed in itemizations, marking {} as FAILED'.format(filing),
                     tags=["nyt-fec", "result:fail"])
         return False
+
+    if is_amended and amends_filing:
+        reassign_standardized_donors(filing, amends_filing)
 
     #add IE total to f24s
     if filing_obj.form == 'F24':
