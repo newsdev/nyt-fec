@@ -43,7 +43,7 @@ class Command(BaseCommand):
         if options['end']:
             end_date = options['end']
         if options['repeat-interval']:
-            repeat_interval = int(options['repeat-interval'])
+            repeat_interval = int(options['repeat-interval']) * 60
         else:
             repeat_interval = None
         if options['filing_dir']:
@@ -60,11 +60,6 @@ class Command(BaseCommand):
             else:
                 loader.download_filings(filings, filing_dir)
                 loader.load_filings(filing_dir, delete=bool(repeat_interval))
-
-            if repeat_interval:
-                time.sleep(repeat_interval)
-            else:
-                break
 
             if repeat_interval:
                 time.sleep(repeat_interval)
