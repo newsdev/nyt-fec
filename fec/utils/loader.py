@@ -22,6 +22,31 @@ from django.conf import settings
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24', 'F5']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 
+def get_json(url, max_fails=10, waittime=10):
+    fails=0
+    while True:
+        try:
+            response = requests.get(url)
+            status_code = response.status_code
+            data = response.json()
+            if data.get('message'):
+                message = data['message']
+                raise Exception(f'{status_code}. {message}')
+            elif data.get('error', {}).get('message'):
+                message = data['error']['message']
+                raise Exception(f'{status_code}. {message}')
+            response.raise_for_status()
+            return data
+        except Exception as e:
+            print(f"retrying get_json. attempt {fails}. error: {e}")
+            traceback.print_exc()
+            fails += 1
+            if fails >= max_fails:
+                logging.log(title="FEC download failed",
+                    text='Failed to download valid JSON from FEC site {} times'.format(max_fails),
+                    tags=["nyt-fec", "result:fail"])
+                return None
+            time.sleep(waittime)
 
 def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
@@ -34,41 +59,15 @@ def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
 
     filings = []
     page = 1
-    fails = 0
     while True:
         #get new filing ids from FEC API
-        resp = requests.get(url+"&page={}".format(page))
+        files = get_json(url+"&page={}".format(page), max_fails, waittime)
         page += 1
-        try:
-            files = resp.json()
-        except:
-            #failed to convert respons to JSON
-            fails += 1
-            if fails >= max_fails:
-                logging.log(title="FEC download failed",
-                    text='Failed to download valid JSON from FEC site {} times'.format(max_fails),
-                    tags=["nyt-fec", "result:fail"])
-                return None
-            time.sleep(waittime)
 
-        if 'error' in files:
-            code = files['error']['code']
-            message = files['error']['message']
-            logging.log(title="FEC download failed",
-                    text=f'{code}. {message}',
-                    tags=["nyt-fec", "result:fail"])
+        if files is None:
             return None
 
-        try:
-            results = files['results']
-        except KeyError:
-            fails += 1
-            if fails >= max_fails:
-                logging.log(title="FEC download failed",
-                    text='Failed to download valid JSON from FEC site {} times'.format(max_fails),
-                    tags=["nyt-fec", "result:fail"])
-                return None
-            time.sleep(waittime)
+        results = files['results']
 
         if len(results) == 0:
             break
