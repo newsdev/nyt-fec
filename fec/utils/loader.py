@@ -50,6 +50,15 @@ def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
                     tags=["nyt-fec", "result:fail"])
                 return None
             time.sleep(waittime)
+
+        if 'error' in files:
+            code = files['error']['code']
+            message = files['error']['message']
+            logging.log(title="FEC download failed",
+                    text=f'{code}. {message}',
+                    tags=["nyt-fec", "result:fail"])
+            return None
+
         try:
             results = files['results']
         except KeyError:
@@ -557,7 +566,7 @@ def create_or_update_filing_status(filing_id, status):
         fs.save()    
 
 
-def load_filings(filing_dir):
+def load_filings(filing_dir, delete=False):
 
     
     filing_fieldnames = [f.name for f in Filing._meta.get_fields()]
@@ -589,6 +598,9 @@ def load_filings(filing_dir):
             logging.log(title="Filing {} loaded".format(filing_id),
                     text='filing {} successfully loaded'.format(filing_id),
                     tags=["nyt-fec", "result:success"])
+
+            if delete:
+                os.remove(full_filename)
 
             filings_loaded += 1
 

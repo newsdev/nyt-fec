@@ -57,9 +57,9 @@ class Command(BaseCommand):
             filings = loader.get_filing_list(start_date, end_date)
             if not filings:
                 print("failed to find any filings for period {}-{}".format(start_date, end_date))
-            
-            loader.download_filings(filings, filing_dir)
-            loader.load_filings(filing_dir)
+            else:
+                loader.download_filings(filings, filing_dir)
+                loader.load_filings(filing_dir, delete=bool(repeat_interval))
 
             if repeat_interval:
                 time.sleep(repeat_interval)
