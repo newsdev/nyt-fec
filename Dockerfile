@@ -12,8 +12,7 @@ RUN pip install -r /usr/src/app/requirements.txt
 COPY . /usr/src/app/
 
 ENV PYTHONPATH=/usr/src/app
-
-
+WORKDIR /usr/src/app
 
 EXPOSE 80
 CMD ["/usr/local/bin/uwsgi", "--ini", "/usr/src/app/config/prd/docker.ini"]
