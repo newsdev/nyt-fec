@@ -729,3 +729,19 @@ class ScheduleE(Transaction):
     class Meta(Transaction.Meta):
         indexes = Transaction.Meta.indexes[:] #this is a deep copy to prevent the base model's fields from being overwritten
         indexes.extend([GinIndex(fields=['name_search']), GinIndex(fields=['purpose_search']), GinIndex(fields=['candidate_search'])])
+
+class Candidate(BaseModel):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    state = models.CharField(max_length=2, null=True, blank=True)
+    district_number = models.CharField(max_length=20, null=True, blank=True)
+    district = models.CharField(max_length=23, null=True, blank=True)
+    fec_candidate_id = models.CharField(max_length=9, null=True, blank=True)
+    fec_committee_id = models.CharField(max_length=9, null=True, blank=True)
+    party = models.CharField(max_length=1, null=True, blank=True)
+    office = models.CharField(max_length=1, null=True, blank=True)
+    note = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return "{} ({}, {})".format(self.name, self.party, self.district)
+
+     
