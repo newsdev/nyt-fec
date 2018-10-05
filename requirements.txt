@@ -8,7 +8,7 @@ django-storages
 djangorestframework
 django-pure-pagination
 django-localflavor
--e git+https://github.com/newsdev/fec2json.git@93bbced97dfffb00dc70a40a440aa5173789bb89#egg=fec2json
+-e git+https://github.com/newsdev/fec2json@4655e710a3c74b7991fb963becbcdc71f65ad560#egg=fec2json
 lxml==4.2.1
 requests
 
