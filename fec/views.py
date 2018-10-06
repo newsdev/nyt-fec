@@ -4,7 +4,7 @@ import csv
 import time
 
 from django.shortcuts import render
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.conf import settings
@@ -93,9 +93,10 @@ def get_contribution_results(request):
     order_by = request.GET.get('order_by', 'contribution_amount')
     order_direction = request.GET.get('order_direction', 'DESC')
     if order_direction == "DESC":
-        results = results.order_by('-{}'.format(order_by))
+        results = results.order_by(F(order_by).desc(nulls_last=True))
     else:
-        results = results.order_by(order_by)
+        results = results.order_by(F(order_by).asc(nulls_last=True))
+
     return results
 
 def contributions(request):
@@ -169,9 +170,9 @@ def get_expenditure_results(request):
     order_by = request.GET.get('order_by', 'expenditure_amount')
     order_direction = request.GET.get('order_direction', 'DESC')
     if order_direction == "DESC":
-        results = results.order_by('-{}'.format(order_by))
+        results = results.order_by(F(order_by).desc(nulls_last=True))
     else:
-        results = results.order_by(order_by)
+        results = results.order_by(F(order_by).asc(nulls_last=True))
 
     return results
 
@@ -253,9 +254,9 @@ def get_ie_results(request):
     order_by = request.GET.get('order_by', 'expenditure_amount')
     order_direction = request.GET.get('order_direction', 'DESC')
     if order_direction == "DESC":
-        results = results.order_by('-{}'.format(order_by))
+        results = results.order_by(F(order_by).desc(nulls_last=True))
     else:
-        results = results.order_by(order_by)
+        results = results.order_by(F(order_by).asc(nulls_last=True))
 
     return results
 
