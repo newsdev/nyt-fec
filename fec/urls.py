@@ -26,4 +26,6 @@ urlpatterns = API + [
         path('donor_details/<int:donor_id>', views.donor_details, name='donor_details'),
         path('filing_status/<str:status>', views.filing_status, name='filing_status'),
         path('committee/<str:committee_id>', views.committee, name='committee'),
+        re_path(r'candidates/$', views.candidates, name='candidates'),
+
     ]

@@ -343,3 +343,19 @@ def committee(request, committee_id):
     else:
         context['most_recent_periodic'] = None
     return render(request, 'committee.html', context)
+
+def candidates(request):
+    deadline = request.GET.get('deadline')
+    candidates = Candidate.objects.order_by('office','state','district_number','party')
+    candidates_with_filings = []
+    for c in candidates:
+        if deadline:
+            filing = c.filing_by_deadline(deadline)
+        else:
+            filing = c.most_recent_filing()
+        candidates_with_filings.append((c,filing))
+
+    return render(request, 'candidates.html', {'deadline':deadline, 'candidates':candidates_with_filings})
+
+
+

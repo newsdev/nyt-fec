@@ -234,6 +234,18 @@ class Filing(BaseModel):
             return True
         return False
     
+    @property
+    def period_candidate_donations_plus_loans(self):
+        contribs = self.period_candidate_contributions or 0
+        loans = self.period_candidate_loans or 0
+        return contribs+loans
+
+    @property
+    def cycle_candidate_donations_plus_loans(self):
+        contribs = self.cycle_candidate_contributions or 0
+        loans = self.cycle_candidate_loans or 0
+        return contribs+loans
+
 
     def __str__(self):
         if self.committee_name:
@@ -744,4 +756,16 @@ class Candidate(BaseModel):
     def __str__(self):
         return "{} ({}, {})".format(self.name, self.party, self.district)
 
-     
+    def most_recent_filing(self):
+        try:
+            f = Filing.objects.filter(filer_id=self.fec_committee_id, active=True).order_by('-coverage_through_date')[0]
+        except:
+            return None
+        return f
+
+    def filing_by_deadline(self, deadline):
+        try:
+            f = Filing.objects.filter(filer_id=self.fec_committee_id, active=True, coverage_through_date=deadline)[0]
+        except:
+            return None
+        return f
