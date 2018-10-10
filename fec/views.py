@@ -355,7 +355,58 @@ def candidates(request):
             filing = c.most_recent_filing()
         candidates_with_filings.append((c,filing))
 
-    return render(request, 'candidates.html', {'deadline':deadline, 'candidates':candidates_with_filings})
+    context = {'deadline':deadline, 'candidates':candidates_with_filings}
+    context['csv_url'] = reverse('candidates_csv') + "?"+ request.GET.urlencode()
+    return render(request, 'candidates.html', context)
 
 
+def candidates_csv(request):
+    deadline = request.GET.get('deadline')
 
+    results = Candidate.objects.all()
+    filename = "Candidates_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))
+
+    candidate_fields = ['name','office','state','district_number','fec_candidate_id','fec_committee_id','party','incumbent']
+    filing_fields = ['filing_id','committee_name','cycle_total_receipts', 'cash_on_hand_close_of_period', 'cycle_individuals_unitemized', 'coverage_through_date']
+
+
+    def rows_with_totals():
+        yield candidate_fields+filing_fields+['cycle_candidate_donations_plus_loans']
+        for result in results:
+            if deadline:
+                filing = result.filing_by_deadline(deadline)
+            else:
+                filing = result.most_recent_filing()
+
+            row = []
+            for f in candidate_fields:
+                value = getattr(result, f)
+                if value is None:
+                    row.append("")
+                else:
+                    row.append(value)
+            for f in filing_fields:
+                if not filing:
+                    row.append("")
+                    continue
+                value = getattr(filing, f)
+                if value is None:
+                    row.append("")
+                else:
+                    row.append(value)
+            if filing:
+                cand_amount = filing.cycle_candidate_donations_plus_loans #this has to be done separately bc it's a property.
+            if not filing or cand_amount is None:
+                row.append("")
+            else:
+                row.append(cand_amount)
+            yield row
+
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows_with_totals()),
+                                     content_type="text/csv")
+
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    return response
