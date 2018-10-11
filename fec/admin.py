@@ -62,6 +62,10 @@ class ScheduleAAdmin(admin.ModelAdmin):
 class DonorAdmin(admin.ModelAdmin):
     search_fields = ['nyt_name']
 
+class CandidateAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
 admin.site.register(ScheduleA, ScheduleAAdmin)
 admin.site.register(ScheduleE, ScheduleEAdmin)
 admin.site.register(Donor, DonorAdmin)
+admin.site.register(Candidate, CandidateAdmin)

@@ -363,7 +363,7 @@ def candidates(request):
 def candidates_csv(request):
     deadline = request.GET.get('deadline')
 
-    results = Candidate.objects.all()
+    results = Candidate.objects.order_by('office','state','district_number','party')
     filename = "Candidates_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))
 
     candidate_fields = ['name','office','state','district_number','fec_candidate_id','fec_committee_id','party','incumbent']
