@@ -367,7 +367,7 @@ def candidates_csv(request):
     filename = "Candidates_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))
 
     candidate_fields = ['name','office','state','district_number','fec_candidate_id','fec_committee_id','party','incumbent']
-    filing_fields = ['filing_id','committee_name','cycle_total_receipts', 'cash_on_hand_close_of_period', 'cycle_individuals_unitemized', 'coverage_through_date']
+    filing_fields = ['filing_id','committee_name','cycle_total_receipts', 'cash_on_hand_close_of_period', 'cycle_individuals_unitemized', 'coverage_through_date', 'created']
 
 
     def rows_with_totals():
