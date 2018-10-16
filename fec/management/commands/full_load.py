@@ -33,11 +33,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         fec_time=pytz.timezone('US/Eastern') #fec time is eastern
 
-        unparsed_start = datetime.datetime.now(fec_time) - datetime.timedelta(days=2)
-        start_date = unparsed_start.strftime('%Y%m%d')
-        unparsed_end = datetime.datetime.now(fec_time) + datetime.timedelta(days=1)
-        end_date = unparsed_end.strftime('%Y%m%d')
-
         if options['start']:
             start_date = options['start']
         if options['end']:
@@ -52,14 +47,26 @@ class Command(BaseCommand):
             filing_dir = 'filings/'
 
         while True:
-            print("looking for filings for period {}-{}".format(start_date, end_date))
-            #keep looping if an interval is provided, this is mostly for testing
-            filings = loader.get_filing_list(start_date, end_date)
-            if not filings:
-                print("failed to find any filings for period {}-{}".format(start_date, end_date))
-            else:
-                loader.download_filings(filings, filing_dir)
-                loader.load_filings(filing_dir, delete=bool(repeat_interval))
+            
+            if not options['start']:
+                unparsed_start = datetime.datetime.now(fec_time) - datetime.timedelta(days=2)
+                start_date = unparsed_start.strftime('%Y%m%d')
+            
+            if not options['end']:
+                unparsed_end = datetime.datetime.now(fec_time) + datetime.timedelta(days=1)
+                end_date = unparsed_end.strftime('%Y%m%d')
+            
+            try:
+                print("looking for filings for period {}-{}".format(start_date, end_date))
+                #keep looping if an interval is provided, this is mostly for testing
+                filings = loader.get_filing_list(start_date, end_date)
+                if not filings:
+                    print("failed to find any filings for period {}-{}".format(start_date, end_date))
+                else:
+                    loader.download_filings(filings, filing_dir)
+                    loader.load_filings(filing_dir, delete=bool(repeat_interval))
+            except Exception as e:
+                traceback.print_exc()
 
             if repeat_interval:
                 time.sleep(repeat_interval)
