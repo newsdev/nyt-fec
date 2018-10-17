@@ -65,6 +65,7 @@ def get_contribution_results(request):
     include_memo = request.GET.get('include_memo')
     min_date = request.GET.get('min_date')
     max_date = request.GET.get('max_date')
+    form_type = request.GET.get('form_type')
 
     results = ScheduleA.objects.filter(active=True)
     if not include_memo:
@@ -84,6 +85,8 @@ def get_contribution_results(request):
         results = results.filter(contribution_date__gte=min_date)
     if max_date:
         results = results.filter(contribution_date__lte=max_date)
+    if form_type:
+        results = results.filter(form_type=form_type)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
@@ -141,6 +144,7 @@ def get_expenditure_results(request):
     include_memo = request.GET.get('include_memo')
     min_date = request.GET.get('min_date')
     max_date = request.GET.get('max_date')
+    form_type = request.GET.get('form_type')
 
     results = ScheduleB.objects.filter(active=True)
     if not include_memo:
@@ -160,6 +164,8 @@ def get_expenditure_results(request):
         results = results.filter(expenditure_date__gte=min_date)
     if max_date:
         results = results.filter(expenditure_date__lte=max_date)
+    if form_type:
+        results = results.filter(form_type=form_type)
 
     if comm:
         matching_committees = Committee.find_committee_by_name(comm)
