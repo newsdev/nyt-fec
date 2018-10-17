@@ -177,8 +177,9 @@ def load_itemizations(sked_model, skeds, debug=False):
                 ScheduleA.objects.create(**refund)
                 continue
 
-            if line['memo_code'] == 'X':
+            if 'memo_code' in line and line['memo_code'] == 'X':
                 line['status'] = 'MEMO'
+
             if line['form_type'].startswith('SE') or line['form_type'].startswith('F57'):
                 nulls = ["0","00",""," "]
                 #fix the district
@@ -509,7 +510,7 @@ def load_filing(filing, filename, filing_fieldnames):
             if 'SchE' in filing_dict['itemizations']:
                 sche_count = load_itemizations(ScheduleE, filing_dict['itemizations']['SchE'])
             if 'F57' in filing_dict['itemizations']:
-                sche_count += load_itemizations(ScheduleE, filing_dict['itemizations']['F57'],debug=True)
+                sche_count += load_itemizations(ScheduleE, filing_dict['itemizations']['F57'])
         sys.stdout.write("inserted {} schedule A's\n".format(scha_count))
         sys.stdout.write("inserted {} schedule B's\n".format(schb_count))
         sys.stdout.write("inserted {} schedule E's\n".format(sche_count))
