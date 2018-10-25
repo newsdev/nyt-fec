@@ -9,9 +9,10 @@ class ScheduleEAdmin(admin.ModelAdmin):
                     'candidate_last_name',
                     'candidate_office',
                     'candidate_state',
-                    'candidate_district'
+                    'candidate_district',
+                    'filing_id',
                     ]
-    fields = readonly_fields + ['nyt_district']
+    fields = readonly_fields + ['nyt_district', 'active']
 
 class ScheduleAAdmin(admin.ModelAdmin):
     def get_queryset(self, request):

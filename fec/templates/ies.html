@@ -40,6 +40,7 @@
         <th> Support/Oppose</th>
         <th> Amount </th>
         <th> Date </th>
+        <th> Form type</th>
     </tr>
     {% for result in results %}
     <tr>
@@ -49,10 +50,11 @@
         <td>{{result.expenditure_purpose_descrip}}</td>
         <td>{{result.candidate_name}}</td>
         <td>{{result.district}}</td>
-        {% if nyt_district %} <td> {{result.nyt_district}} (wrong? fix <a href="{% url opts|admin_urlname:'change' result.id%}">here</a>) </td> {% endif %}
+        {% if nyt_district %} <td> {{result.nyt_district}} (<a href="{% url opts|admin_urlname:'change' result.id%}">edit</a>) </td> {% endif %}
         <td>{{result.support}} </td>
         <td>${{result.expenditure_amount|floatformat:2|intcomma}}</td>
         <td>{{result.expenditure_date_formatted|date:"SHORT_DATE_FORMAT"}}</td>
+        <td>{{result.filing_type}}</td>
     </tr>
   {% endfor %}
 </table>

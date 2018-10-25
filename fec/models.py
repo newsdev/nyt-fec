@@ -677,6 +677,15 @@ class ScheduleE(Transaction):
             return "Oppose"
         return
 
+    @property
+    def filing_type(self):
+        try:
+            filing = Filing.objects.get(filing_id=self.filing_id)
+        except:
+            return None
+        return filing.form
+    
+
     def export_fields():
         return ['status',
                 'form_type',
