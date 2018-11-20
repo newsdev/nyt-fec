@@ -21,14 +21,14 @@ from django.conf import settings
 
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24', 'F5']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
+API_KEY = os.environ.get('FEC_API_KEY')
 
 
 def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
     #TODO: institute an API key pool or fallback?
-    api_key = os.environ.get('FEC_API_KEY')
     url = "https://api.open.fec.gov/v1/efile/filings/?per_page=100&sort=-receipt_date"
-    url += "&api_key={}".format(api_key)
+    url += "&api_key={}".format(API_KEY)
     url += "&min_receipt_date={}".format(start_date)
     url += "&max_receipt_date={}".format(end_date)
 
@@ -366,6 +366,37 @@ def evaluate_filing_file(filename, filing_id):
         #if we get here, a filing exists, it's not 'failed' or 'processing' so we should not load
         return False
 
+def get_filer_name(filer_id):
+    #if we don't have a filer name, let's
+    #1) search for the committee by id in our db
+    #2) look it up by ID in the FEC's API and import a new committee
+    committee = Committee.objects.filter(fec_id=filer_id)
+    if len(committee) == 1 and committee[0].committee_name:
+        return committee[0].committee_name
+    base_url = "https://api.open.fec.gov/v1/committee/{}/?api_key={}"
+    url = base_url.format(filer_id, API_KEY)
+    r = requests.get(url)
+    try:
+        data = r.json()
+    except:
+        return None
+    #create the committee object
+    try:
+        comm = Committee.objects.create(
+            fec_id=data['results'][0]['committee_id'],
+            committee_name=data['results'][0]['name'],
+            street_1=data['results'][0]['street_1'],
+            street_2=data['results'][0]['street_2'],
+            city=data['results'][0]['city'],
+            state=data['results'][0]['state'],
+            zipcode=data['results'][0]['zip'],
+            committee_type=data['results'][0]['committee_type'],
+            committee_designation=data['results'][0]['designation'],)
+        comm.save()
+    except:
+        pass
+    return data['results'][0]['name']
+
 def load_filing(filing, filename, filing_fieldnames):
     #returns boolean depending on whether filing was loaded
     
@@ -474,6 +505,10 @@ def load_filing(filing, filename, filing_fieldnames):
     filing_obj.save()
 
     #create or update committee
+    if filing_dict.get('committee_name') is None:
+        filing_obj.committee_name = get_filer_name(filing_dict['filer_committee_id_number'])
+        filing_obj.save()
+
     try:
         comm = Committee.objects.create(fec_id=filing_dict['filer_committee_id_number'])
         comm.save()
