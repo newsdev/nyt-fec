@@ -28,5 +28,6 @@ urlpatterns = API + [
         path('committee/<str:committee_id>', views.committee, name='committee'),
         re_path(r'candidates/$', views.candidates, name='candidates'),
         re_path(r'candidates_csv/$', views.candidates_csv, name='candidates_csv'),
+        re_path(r'inaugural/$', views.inaugural, name='inaugural'),
 
     ]

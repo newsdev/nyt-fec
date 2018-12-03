@@ -48,4 +48,7 @@ class FilingForm(forms.Form):
     min_raised = forms.DecimalField(label='Minimum raised', required=False)
     exclude_amendments = forms.BooleanField(label='Exclude amendments', required=False)
     min_date = forms.CharField(label="Min filing date (YYYYMMDD)", required=False)
-    max_date = forms.DateField(label="Max filing date (YYYYMMDD)", required=False)    
+    max_date = forms.DateField(label="Max filing date (YYYYMMDD)", required=False)
+
+class InauguralForm(forms.Form):
+    name = forms.CharField(label='Contributor name', max_length=500, required=False)

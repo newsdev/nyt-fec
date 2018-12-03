@@ -779,3 +779,13 @@ class Candidate(BaseModel):
         except:
             return None
         return f
+
+class InauguralContrib(BaseModel):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
+    state = models.CharField(max_length=255, null=True, blank=True)
+    zipcode = models.CharField(max_length=255, null=True, blank=True)
+    date = models.CharField(max_length=255, null=True, blank=True)
+    amount = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
+

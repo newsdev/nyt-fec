@@ -416,3 +416,16 @@ def candidates_csv(request):
 
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
     return response
+
+def inaugural(request):
+    form = InauguralForm(request.GET)
+    if not request.GET:
+        return render(request, 'inaugural.html', {'form': form})
+    if request.GET.get('name'):
+        contribs = InauguralContrib.objects.filter(name__icontains=request.GET.get('name')).order_by('-amount')
+    else:
+        contribs = InauguralContrib.objects.order_by('-amount')
+    paginator = Paginator(contribs, 50)
+    page = request.GET.get('page')
+    results = paginator.get_page(page)
+    return render(request, 'inaugural.html', {'form':form, 'results':results})
