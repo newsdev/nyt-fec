@@ -422,7 +422,7 @@ def inaugural(request):
     if not request.GET:
         return render(request, 'inaugural.html', {'form': form})
     if request.GET.get('name'):
-        contribs = InauguralContrib.objects.filter(name__icontains=request.GET.get('name')).order_by('-amount')
+        contribs = InauguralContrib.objects.annotate(search=SearchVector('name')).filter(search=request.GET.get('name')).order_by('-amount')
     else:
         contribs = InauguralContrib.objects.order_by('-amount')
     paginator = Paginator(contribs, 50)

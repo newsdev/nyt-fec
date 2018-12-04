@@ -40,7 +40,7 @@
         <td>{{result.state}}</td>
         <td>{{result.zipcode}}</td>
         <td>{{result.date}}</td>
-        <td>${{result.amount}}</td>
+        <td>${{result.amount|floatformat:2|intcomma}}</td>
     </tr>
   {% endfor %}
 </table>

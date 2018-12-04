@@ -51,11 +51,12 @@
   {% endfor %}
 </table>
 </div>
-
+<div class="row">
+    Contribution search does not include inaugural contributions. To find those, search <a href="{% url 'inaugural' %}">here</a>
+</div>
 {% include 'pagination.html' %}
 
 {% endif %}
-
 
 
 {% endblock %}
