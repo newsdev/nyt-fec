@@ -22,8 +22,9 @@ from django.conf import settings
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24', 'F5']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 API_KEY = os.environ.get('FEC_API_KEY')
+assert API_KEY, "Cannot find a FEC api key, please add as environment variable FEC_API_KEY"
 
-
+CYCLE = settings.CYCLE
 def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
     #TODO: institute an API key pool or fallback?
@@ -120,7 +121,7 @@ def evaluate_filing(filing):
         return False
 
     #remove filings whose coverage period ended outside the current cycle
-    cycle = settings.CYCLE
+    cycle = CYCLE
     coverage_end = filing['coverage_end_date']
     if coverage_end:
         coverage_end_year = coverage_end[0:4]
@@ -285,7 +286,8 @@ def clean_filing_fields(processed_filing, filing_fieldnames):
     #check whether the filing requires adding odd-year totals
     odd_filing = None
     addons = {}
-    if processed_filing['form_type'] == 'F3' and is_even_year(processed_filing):
+    if processed_filing['form'] == 'F3X' and is_even_year(processed_filing):
+
         odd_filing = last_odd_filing(processed_filing)
 
     clean_filing = {}
@@ -302,7 +304,7 @@ def clean_filing_fields(processed_filing, filing_fieldnames):
             
         elif k.startswith("col_b_"):
             key = "cycle_{}".format(k.replace('col_b_',''))
-            if odd_filing:
+            if odd_filing and key in filing_fieldnames:
                 addons[key] = getattr(odd_filing, key)
 
         if key in filing_fieldnames:
@@ -326,9 +328,15 @@ def is_even_year(filing):
     return False
 
 def last_odd_filing(filing):
-    committee_id = filing['filer_id']
+    committee_id = filing['filer_committee_id_number']
     committee_filings = Filing.objects.filter(filer_id=committee_id).order_by('-coverage_through_date','-date_signed')
-    return committee_filings[0]
+    if len(committee_filings) == 0:
+        return None
+    print(CYCLE-1)
+    for old_filing in committee_filings:
+        print(old_filing.coverage_through_date[0:4])
+        if int(old_filing.coverage_through_date[0:4]) == CYCLE-1:
+            return old_filing
 
 
 def evaluate_filing_file(filename, filing_id):
