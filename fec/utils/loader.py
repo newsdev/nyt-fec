@@ -251,7 +251,6 @@ def reassign_standardized_donors(filing_id, amended_id):
     #that we're about to deactivate
     matched_transactions = ScheduleA.objects.filter(filing_id=amended_id).exclude(donor=None)
     i = 0
-    print(len(matched_transactions))
     for transaction in matched_transactions:
         transaction_id = transaction.transaction_id
         contributor_last_name = transaction.contributor_last_name
@@ -332,9 +331,7 @@ def last_odd_filing(filing):
     committee_filings = Filing.objects.filter(filer_id=committee_id).order_by('-coverage_through_date','-date_signed')
     if len(committee_filings) == 0:
         return None
-    print(CYCLE-1)
     for old_filing in committee_filings:
-        print(old_filing.coverage_through_date[0:4])
         if int(old_filing.coverage_through_date[0:4]) == CYCLE-1:
             return old_filing
 
