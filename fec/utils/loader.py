@@ -332,7 +332,7 @@ def last_odd_filing(filing):
     if len(committee_filings) == 0:
         return None
     for old_filing in committee_filings:
-        if int(old_filing.coverage_through_date[0:4]) == CYCLE-1:
+        if old_filing.coverage_through_date and int(old_filing.coverage_through_date[0:4]) == CYCLE-1:
             return old_filing
 
 
@@ -490,6 +490,7 @@ def load_filing(filing, filename, filing_fieldnames):
         coverage_start_date = filing_dict['coverage_from_date']
         coverage_end_date = filing_dict['coverage_through_date']
         if coverage_start_date and coverage_end_date:
+            #we're going to start by looking for whole forms to deactivate
             covered_filings = Filing.objects.filter(date_signed__gte=coverage_start_date,
                                                 date_signed__lte=coverage_end_date,
                                                 form__in=['F24','F5'],
@@ -497,6 +498,17 @@ def load_filing(filing, filename, filing_fieldnames):
             covered_filings.update(active=False, status='COVERED')
             covered_transactions = ScheduleE.objects.filter(filing_id__in=[f.filing_id for f in covered_filings])
             covered_transactions.update(active=False, status='COVERED')
+            #there might be some additional transactions close to the edge of the filing period
+            #that we should deactivate based on inconsistent dates inside filings
+            individual_covered_transactions = ScheduleE.objects.filter(filer_committee_id_number=filing_dict['filer_committee_id_number'],
+                                                                    active=True).exclude(filing_id=filing)
+            by_expend_date = individual_covered_transactions.filter(expenditure_date__gte=coverage_start_date,
+                                                                    expenditure_date__lte=coverage_end_date)
+            by_expend_date.update(active=False, status='COVERED')
+            by_dissemination_date = individual_covered_transactions.filter(dissemination_date__gte=coverage_start_date,
+                                                                    dissemination_date__lte=coverage_end_date)
+            by_dissemination_date.update(active=False, status='COVERED')
+
 
     clean_filing_dict = clean_filing_fields(filing_dict, filing_fieldnames)
     clean_filing_dict['filing_id'] = filing
