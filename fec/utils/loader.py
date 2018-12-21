@@ -94,6 +94,37 @@ def filing_list_from_rss():
             filings.append(filing['file_number'])
     return filings
 
+def filing_list_from_classic():
+    #backup backup scraper for the classic website which seem to be ahead sometimes
+    http = urllib3.PoolManager()
+    dates = []
+    now = datetime.datetime.now()
+    dates.append(now.strftime('%m/%d/%Y'))
+    yesterday = now-datetime.timedelta(days=1)
+    dates.append(yesterday.strftime('%m/%d/%Y'))
+    tomorrow = now+datetime.timedelta(days=1)
+    dates.append(tomorrow.strftime('%m/%d/%Y'))
+    filings = []
+    for d in dates:
+        data = "comid=C&date={}&name=&state=&frmtype=&rpttype=&submit=Send+Query".format(d)
+        response = http.request('POST', 'http://docquery.fec.gov/cgi-bin/forms/', body=data)
+        soup = BeautifulSoup(response.data, "lxml")
+        trs = soup.find_all('tr')
+        for tr in trs:
+            tds = tr.find_all('td')
+            if len(tds) == 9:
+                filing = {}
+                filing['form_type'] = tds[0].text
+                filing['file_number'] = tds[1].text.replace('FEC-','')
+                coverage_through = tds[4].text.strip()
+                filing['coverage_end_date'] = coverage_through[6:]+coverage_through[0:2]+coverage_through[3:5]
+                link = tds[7].a['href']
+                filing['committee_id'] = link.split('/')[-3]
+                if evaluate_filing(filing):
+                    filings.append(filing['file_number'])
+
+    return filings
+
 def evaluate_filing(filing):
     #determines whether filings in the API should be downloaded
     filing_id = filing['file_number']
