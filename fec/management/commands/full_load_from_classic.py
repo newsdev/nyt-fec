@@ -38,7 +38,7 @@ class Command(BaseCommand):
             filing_dir = 'filings/'
 
         while True:
-            print("Pulling filings from RSS feed")
+            print("Pulling filings from Classic site scrape")
             #keep looping if an interval is provided, this is mostly for testing
             filings = loader.filing_list_from_classic()
             if not filings:
