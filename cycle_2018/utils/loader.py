@@ -9,7 +9,7 @@ import sys
 import urllib3
 import lxml
 from decimal import Decimal
-from fec.utils import logging
+from cycle_2018.utils import logging
 
 from bs4 import BeautifulSoup
 
@@ -19,12 +19,13 @@ from cycle_2018.models import *
 from django.conf import settings
 
 
+
 ACCEPTABLE_FORMS = ['F3','F3X','F3P','F24', 'F5']
 BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 API_KEY = os.environ.get('FEC_API_KEY')
 assert API_KEY, "Cannot find a FEC api key, please add as environment variable FEC_API_KEY"
 
-CYCLE = settings.CYCLE
+from cycle_2018.cycle_settings import CYCLE
 def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
     #TODO: institute an API key pool or fallback?
@@ -127,9 +128,19 @@ def filing_list_from_classic():
 
 def evaluate_filing(filing):
     #determines whether filings in the API should be downloaded
-    filing_id = filing['file_number']
+    coverage_end = filing['coverage_end_date']
+    if (check_existing_filings(filing)
+        and remove_bad_committees(filing)
+        and check_acceptable_forms(filing)
+        and check_coverage_dates(filing, coverage_end_date)):
+            create_or_update_filing_status(filing['file_number'], 'REFUSED')
+            return False
 
+    return True
+
+def check_existing_filings(filing):
     #check whether we've already marked this filing as bad
+    filing_id = filing['file_number']
     existing_filings = FilingStatus.objects.filter(filing_id=filing_id)
     if len(existing_filings) > 0:
         #remove filings that were successful
@@ -139,34 +150,29 @@ def evaluate_filing(filing):
             #include filings that failed or are missing a status marker
             return True
 
+def remove_bad_committees(filing):
     #remove bad committees:
     if filing['committee_id'] in BAD_COMMITTEES:
-        status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
-        status.save()
         return False
+    return True
 
+def check_acceptable_forms(filing):
     #remove filing types we're not loading
     if filing['form_type'].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
-        status = FilingStatus.objects.create(filing_id=filing_id, status='REFUSED')
-        status.save()
         return False
+    return True
 
+def check_coverage_dates(filing, coverage_end):
     #remove filings whose coverage period ended outside the current cycle
-    cycle = CYCLE
-    coverage_end = filing['coverage_end_date']
     if coverage_end:
         coverage_end_year = coverage_end[0:4]
-        if filing['form_type'] == 'F3P' and cycle % 4 == 0:
+        if filing['form_type'] == 'F3P' and CYCLE % 4 == 0:
             #if it's a presidential filing, we want it if it's in the 4-year period.
-            acceptable_years = [cycle, cycle-1, cycle-3, cycle-4]
+            acceptable_years = [CYCLE, CYCLE-1, CYCLE-3, CYCLE-4]
         else:
-            acceptable_years = [cycle, cycle-1]
+            acceptable_years = [CYCLE, CYCLE-1]
         if int(coverage_end_year) not in acceptable_years:
-            create_or_update_filing_status(filing_id, 'REFUSED')
             return False
-
-
-    #by the time we get here, it's filings we haven't seen but don't meet our refused conditions    
     return True
 
 
@@ -457,19 +463,11 @@ def load_filing(filing, filename, filing_fieldnames):
         return False
 
     #do not load filings outside of this cycle (these will likely be amendments of old filings)
-    cycle = settings.CYCLE
+    #we check this before we download the filing, but this seems like worth re-checking in case someone manually downloaded a file or somehting
     coverage_end = filing_dict.get('coverage_through_date')
-    if coverage_end:
-        coverage_end_year = coverage_end[0:4]
-        if filing_dict['form_type'] == 'F3P' and cycle % 4 == 0:
-            #if it's a presidential filing, we want it if it's in the 4-year period.
-            acceptable_years = [cycle, cycle-1, cycle-3, cycle-4]
-        else:
-            acceptable_years = [cycle, cycle-1]
-        if int(coverage_end_year) not in acceptable_years:
-            sys.stdout.write('Covered through {}, not importing\n'.format(coverage_end))
-            create_or_update_filing_status(filing, 'REFUSED')
-            return False
+    if not check_coverage_dates(filing_dict, coverage_end):
+        create_or_update_filing_status(filing['filing_id'], 'REFUSED')
+        return False
 
     #deal with amended filings
     is_amended = False

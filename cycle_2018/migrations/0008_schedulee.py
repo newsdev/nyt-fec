@@ -7,7 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fec', '0007_scheduleb'),
+        ('cycle_2018', '0007_scheduleb'),
     ]
 
     operations = [

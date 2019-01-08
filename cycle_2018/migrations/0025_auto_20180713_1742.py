@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fec', '0024_filingstatus'),
+        ('cycle_2018', '0024_filingstatus'),
     ]
 
     operations = [

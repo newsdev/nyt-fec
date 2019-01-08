@@ -7,13 +7,13 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fec', '0021_donor'),
+        ('cycle_2018', '0021_donor'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='schedulea',
             name='donor',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='fec.Donor'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='cycle_2018.Donor'),
         ),
     ]

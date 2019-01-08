@@ -7,7 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fec', '0023_auto_20180314_2014'),
+        ('cycle_2018', '0023_auto_20180314_2014'),
     ]
 
     operations = [

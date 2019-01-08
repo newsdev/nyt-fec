@@ -8,7 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fec', '0028_schedulea_old_donor_id'),
+        ('cycle_2018', '0028_schedulea_old_donor_id'),
     ]
 
     operations = [
