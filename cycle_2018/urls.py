@@ -1,8 +1,8 @@
 from django.urls import include, path, re_path
 from django.contrib import admin
 from rest_framework import routers, serializers, viewsets
-from fec import views
-from fec.api import *
+from cycle_2018 import views
+from cycle_2018.api import *
 
 router = routers.DefaultRouter()
 router.register(r'filings', FilingViewSet, base_name=Filing)

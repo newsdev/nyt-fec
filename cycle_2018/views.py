@@ -11,8 +11,8 @@ from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.urls import reverse
 
-from fec.models import *
-from fec.forms import *
+from cycle_2018.models import *
+from cycle_2018.forms import *
 
 class Echo:
     """An object that implements just the write method of the file-like

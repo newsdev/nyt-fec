@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 
 import process_filing #this is from fec2json
 
-from fec.models import *
+from cycle_2018.models import *
 from django.conf import settings
 
 

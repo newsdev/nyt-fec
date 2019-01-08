@@ -1,6 +1,6 @@
 import csv
 
-from fec.models import InauguralContrib
+from cycle_2018.models import InauguralContrib
 
 from django.core.management.base import BaseCommand, CommandError
 

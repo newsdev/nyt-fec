@@ -7,9 +7,9 @@ import process_filing
 import time
 import traceback
 import sys
-from fec.models import *
+from cycle_2018.models import *
 
-from fec.utils import loader
+from cycle_2018.utils import loader
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -38,11 +38,11 @@ class Command(BaseCommand):
             filing_dir = 'filings/'
 
         while True:
-            print("Pulling filings from RSS feed")
+            print("Pulling filings from Classic site scrape")
             #keep looping if an interval is provided, this is mostly for testing
-            filings = loader.filing_list_from_rss()
+            filings = loader.filing_list_from_classic()
             if not filings:
-                print("failed to find any new filings in the RSS feed")
+                print("failed to find any new filings on the classic site")
             else:
                 loader.download_filings(filings, filing_dir)
                 loader.load_filings(filing_dir)

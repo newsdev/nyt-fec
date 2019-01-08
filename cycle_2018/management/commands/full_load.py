@@ -7,9 +7,9 @@ import process_filing
 import time
 import traceback
 import sys
-from fec.models import *
+from cycle_2018.models import *
 
-from fec.utils import loader
+from cycle_2018.utils import loader
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -57,10 +57,15 @@ class Command(BaseCommand):
             filings = loader.get_filing_list(start_date, end_date)
             if not filings:
                 print("failed to find any filings for period {}-{}".format(start_date, end_date))
-            else:
-                loader.download_filings(filings, filing_dir)
+            
+            loader.download_filings(filings, filing_dir)
+            loader.load_filings(filing_dir)
 
-        
+            if repeat_interval:
+                time.sleep(repeat_interval)
+            else:
+                break
+
             if repeat_interval:
                 time.sleep(repeat_interval)
             else:

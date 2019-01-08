@@ -7,9 +7,9 @@ import process_filing
 import time
 import traceback
 import sys
-from fec.models import *
+from cycle_2018.models import *
 
-from fec.utils import loader
+from cycle_2018.utils import loader
 
 from django.core.management.base import BaseCommand, CommandError
 

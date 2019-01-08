@@ -21,12 +21,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'pure_pagination',
     'storages',
-    'fec'
+    'cycle_2018'
 ]
 
 MIDDLEWARE = [
-    'fec.middleware.HealthCheckMiddleware',
-    'fec.middleware.TimezoneMiddleware',
+    'middleware.HealthCheckMiddleware',
+    'middleware.TimezoneMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -36,12 +36,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'fec.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['fec/templates'],
+        'DIRS': ['cycle_2018/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,14 +117,12 @@ AWS_S3_SECURE_URLS = False
 AWS_S3_URL_PROTOCOL = 'http:'
 
 STATICFILES_LOCATION = 'apps/fec'
-STATICFILES_STORAGE = 'fec.utils.custom_storages.StaticStorage'
+STATICFILES_STORAGE = 'utils.custom_storages.StaticStorage'
 STATIC_URL = "%s/" % STATICFILES_LOCATION
 
 MEDIAFILES_LOCATION = 'apps/fec/media'
 MEDIA_URL = "%s/" % MEDIAFILES_LOCATION
-DEFAULT_FILE_STORAGE = 'fec.utils.custom_storages.MediaStorage'
-
-CYCLE=2018
+DEFAULT_FILE_STORAGE = 'utils.custom_storages.MediaStorage'
 
 #contact email address for the person/team currently responsible for the app.
 CONTACT = os.environ.get('CONTACT')

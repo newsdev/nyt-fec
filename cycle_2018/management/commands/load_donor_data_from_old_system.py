@@ -1,6 +1,6 @@
 import csv
 
-from fec.models import Donor, ScheduleA
+from cycle_2018.models import Donor, ScheduleA
 
 from django.core.management.base import BaseCommand, CommandError
 

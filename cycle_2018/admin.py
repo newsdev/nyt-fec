@@ -1,5 +1,5 @@
 from django.contrib import admin
-from fec.models import *
+from cycle_2018.models import *
 
 class ScheduleEAdmin(admin.ModelAdmin):
     ordering = ['-expenditure_amount']
