@@ -23,7 +23,7 @@ class Echo:
         return value
 
 def index(request):
-    return render(request, 'index.html')
+    return render(request, '2018/index.html')
 
 def filings(request):
     form = FilingForm(request.GET)
@@ -54,7 +54,7 @@ def filings(request):
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-    return render(request, 'filings.html', {'form': form, 'results':results})
+    return render(request, '2018/filings.html', {'form': form, 'results':results})
 
 def get_contribution_results(request):
     comm = request.GET.get('committee')
@@ -104,7 +104,7 @@ def get_contribution_results(request):
 def contributions(request):
     form = ContributionForm(request.GET)
     if not request.GET:
-        return render(request, 'contributions.html', {'form': form})
+        return render(request, '2018/contributions.html', {'form': form})
 
     results = get_contribution_results(request)
 
@@ -117,7 +117,7 @@ def contributions(request):
     results = paginator.get_page(page)
 
     
-    return render(request, 'contributions.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
+    return render(request, '2018/contributions.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
 
 def contributions_csv(request):
     results = get_contribution_results(request)
@@ -185,7 +185,7 @@ def get_expenditure_results(request):
 def expenditures(request):
     form = ExpenditureForm(request.GET)
     if not request.GET:
-        return render(request, 'expenditures.html', {'form': form})
+        return render(request, '2018/expenditures.html', {'form': form})
 
     results = get_expenditure_results(request)    
 
@@ -197,7 +197,7 @@ def expenditures(request):
     page = request.GET.get('page')
     results = paginator.get_page(page)
 
-    return render(request, 'expenditures.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
+    return render(request, '2018/expenditures.html', {'form': form, 'results':results, 'results_sum':results_sum, 'csv_url':csv_url})
 
 def expenditures_csv(request):
     results = get_expenditure_results(request)
@@ -268,7 +268,7 @@ def get_ie_results(request):
 def ies(request):
     form = IEForm(request.GET)
     if not request.GET:
-        return render(request, 'ies.html', {'form': form})
+        return render(request, '2018/ies.html', {'form': form})
 
     results = get_ie_results(request)
 
@@ -284,7 +284,7 @@ def ies(request):
         context['nyt_district'] = True
         context['opts'] = ScheduleE._meta
 
-    return render(request, 'ies.html', context)
+    return render(request, '2018/ies.html', context)
 
 def ie_csv(request):
     results = get_ie_results(request)
@@ -312,7 +312,7 @@ def races(request):
     else:
         races = races.order_by('-expenditure_amount__sum')
 
-    return render(request, 'races.html', {'races':races})
+    return render(request, '2018/races.html', {'races':races})
 
 def top_donors(request):
     donors = sorted(Donor.objects.all(), key=lambda d: d.contribution_total, reverse=True)
@@ -321,7 +321,7 @@ def top_donors(request):
     page = request.GET.get('page')
     results = paginator.get_page(page)
     opts = Donor._meta
-    return render(request, 'top_donors.html', {'results':results, 'contact':settings.CONTACT, 'opts':opts})
+    return render(request, '2018/top_donors.html', {'results':results, 'contact':settings.CONTACT, 'opts':opts})
 
 
 def donor_details(request, donor_id):
@@ -329,13 +329,13 @@ def donor_details(request, donor_id):
     donor = Donor.objects.get(id=donor_id)
     context['donor'] = donor
     context['contribs'] = donor.schedulea_set.filter(active=True).order_by('-contribution_amount')
-    return render(request, 'donor_details.html', context)
+    return render(request, '2018/donor_details.html', context)
 
 def filing_status(request, status):
     context = {}
     status = status.upper()
     context['filings'] = FilingStatus.objects.filter(status=status).order_by('-created')
-    return render(request, 'filing_status.html', context)
+    return render(request, '2018/filing_status.html', context)
 
 def committee(request, committee_id):
     context = {}
@@ -348,7 +348,7 @@ def committee(request, committee_id):
         context['most_recent_periodic'] = periodic[0]
     else:
         context['most_recent_periodic'] = None
-    return render(request, 'committee.html', context)
+    return render(request, '2018/committee.html', context)
 
 def candidates(request):
     deadline = request.GET.get('deadline')
@@ -363,7 +363,7 @@ def candidates(request):
 
     context = {'deadline':deadline, 'candidates':candidates_with_filings}
     context['csv_url'] = reverse('candidates_csv') + "?"+ request.GET.urlencode()
-    return render(request, 'candidates.html', context)
+    return render(request, '2018/candidates.html', context)
 
 
 def candidates_csv(request):
@@ -420,7 +420,7 @@ def candidates_csv(request):
 def inaugural(request):
     form = InauguralForm(request.GET)
     if not request.GET:
-        return render(request, 'inaugural.html', {'form': form})
+        return render(request, '2018/inaugural.html', {'form': form})
     if request.GET.get('name'):
         contribs = InauguralContrib.objects.annotate(search=SearchVector('name')).filter(search=request.GET.get('name')).order_by('-amount')
     else:
@@ -428,4 +428,4 @@ def inaugural(request):
     paginator = Paginator(contribs, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-    return render(request, 'inaugural.html', {'form':form, 'results':results})
+    return render(request, '2018/inaugural.html', {'form':form, 'results':results})
