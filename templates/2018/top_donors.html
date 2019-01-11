@@ -17,7 +17,7 @@
     </tr>
     {% for result in results %}
     <tr>
-        <td> <a href="{%url 'donor_details' result.id %}">{{result.nyt_name}}</a> </td>
+        <td> <a href="{%url 'donor:donor_details' result.id %}">{{result.nyt_name}}</a> </td>
         <td> {{result.nyt_employer}} </td>
         <td>
         {%if result.contribution_total > 0 %}

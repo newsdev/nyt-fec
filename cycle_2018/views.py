@@ -54,7 +54,7 @@ def filings(request):
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
     results = paginator.get_page(page)
-    return render(request, '2018/filings.html', {'form': form, 'results':results})
+    return render(request, '2018/filings.html', {'form': form, 'results':results, 'opts': ScheduleA._meta})
 
 def get_contribution_results(request):
     comm = request.GET.get('committee')
@@ -110,7 +110,7 @@ def contributions(request):
 
     results_sum = None if request.GET.get('include_memo') else results.aggregate(Sum('contribution_amount'))
 
-    csv_url = reverse('contributions_csv') + "?"+ request.GET.urlencode()
+    csv_url = reverse('2018:contributions_csv') + "?"+ request.GET.urlencode()
 
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
@@ -191,7 +191,7 @@ def expenditures(request):
 
     results_sum = None if request.GET.get('include_memo') else results.aggregate(Sum('expenditure_amount'))
 
-    csv_url = reverse('expenditures_csv') + "?"+ request.GET.urlencode()
+    csv_url = reverse('2018:expenditures_csv') + "?"+ request.GET.urlencode()
 
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
@@ -274,7 +274,7 @@ def ies(request):
 
     results_sum = results.aggregate(Sum('expenditure_amount'))
 
-    csv_url = reverse('ie_csv') + "?"+ request.GET.urlencode()
+    csv_url = reverse('2018:ie_csv') + "?"+ request.GET.urlencode()
 
     paginator = Paginator(results, 50)
     page = request.GET.get('page')
@@ -323,14 +323,6 @@ def top_donors(request):
     opts = Donor._meta
     return render(request, '2018/top_donors.html', {'results':results, 'contact':settings.CONTACT, 'opts':opts})
 
-
-def donor_details(request, donor_id):
-    context = {}
-    donor = Donor.objects.get(id=donor_id)
-    context['donor'] = donor
-    context['contribs'] = donor.schedulea_set.filter(active=True).order_by('-contribution_amount')
-    return render(request, '2018/donor_details.html', context)
-
 def filing_status(request, status):
     context = {}
     status = status.upper()
@@ -362,7 +354,7 @@ def candidates(request):
         candidates_with_filings.append((c,filing))
 
     context = {'deadline':deadline, 'candidates':candidates_with_filings}
-    context['csv_url'] = reverse('candidates_csv') + "?"+ request.GET.urlencode()
+    context['csv_url'] = reverse('2018:candidates_csv') + "?"+ request.GET.urlencode()
     return render(request, '2018/candidates.html', context)
 
 

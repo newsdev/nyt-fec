@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'pure_pagination',
     'storages',
+    'donor',
     'cycle_2018'
 ]
 

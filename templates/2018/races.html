@@ -16,7 +16,7 @@
         <td> {{race.nyt_district}} </td>
         <td align="right"> ${{race.expenditure_amount__sum|floatformat:2|intcomma}}</td>
 
-        <td> <a href="{%url 'ies'%}?nyt_district={{race.nyt_district}}">View district IEs</a></td>
+        <td> <a href="{%url '2018:ies'%}?nyt_district={{race.nyt_district}}">View district IEs</a></td>
     </tr>
     {% endfor %}
 </table>

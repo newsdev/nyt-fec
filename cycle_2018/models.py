@@ -1,7 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from django.db.models import signals
-from django.dispatch import receiver
 from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from django.db.models import Sum
@@ -261,6 +259,7 @@ class Filing(BaseModel):
             models.Index(fields=['filing_id']),
             models.Index(fields=['committee_name']),
         ]
+
 
 class Donor(BaseModel):
     nyt_name = models.CharField(max_length=255, null=True, blank=True)

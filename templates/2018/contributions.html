@@ -6,7 +6,7 @@
 
 <h2> Search for receipts </h2>
 <div class="row">
-<form action="/contributions/" method="get">
+<form action="/2018/contributions/" method="get">
     {{ form.as_p }}
     <input type="submit" value="Submit" />
 </form>
@@ -52,7 +52,7 @@
 </table>
 </div>
 <div class="row">
-    Contribution search does not include inaugural contributions. To find those, search <a href="{% url 'inaugural' %}">here</a>
+    Contribution search does not include inaugural contributions. To find those, search <a href="{% url '2018:inaugural' %}">here</a>
 </div>
 {% include 'pagination.html' %}
 
