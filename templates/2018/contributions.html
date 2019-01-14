@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+<h2> Search for receipts </h2>
+<div class="row">
+<form action="/2018/contributions/" method="get">
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+</div>
+
+
+<div class="row">
+{% if results %}
+<div class="page-header row">
+  <div class="header-title">
+    {% if results_sum %}
+    <h2> Reciepts total: ${{results_sum.contribution_amount__sum|floatformat:2|intcomma}} </h2>
+    This total includes only itemized receipts.
+    {% endif %} 
+    <div class="text-right">
+        <a href="{{csv_url}}">Download as CSV</a>
+    </div>
+    </div>
+</div>
+  <table class="table table-bordered table-striped">
+    <tr>
+        <th> Committee </th>
+        <th> Contributor name </th>
+        <th> Address </th>
+        <th> Employer </th>
+        <th> Occupation </th>
+        <th> Amount </th>
+        <th> Date </th>
+        <th> Line Type </th>
+    </tr>
+    {% for result in results %}
+    <tr>
+        <td>{{result.committee_name}}</td>
+        <td>{{result.contributor_name}}</td>
+        <td>{{result.address}}</td>
+        <td>{{result.contributor_employer}}</td>
+        <td>{{result.contributor_occupation}}</td>
+        <td>${{result.contribution_amount|floatformat:2|intcomma}}</td>
+        <td>{{result.contribution_date_formatted|date:"SHORT_DATE_FORMAT"}}</td>
+        <td>{{result.form_type}}</td>
+    </tr>
+  {% endfor %}
+</table>
+</div>
+<div class="row">
+    Contribution search does not include inaugural contributions. To find those, search <a href="{% url '2018:inaugural' %}">here</a>
+</div>
+{% include 'pagination.html' %}
+
+{% endif %}
+
+
+{% endblock %}
