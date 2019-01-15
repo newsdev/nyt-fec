@@ -9,5 +9,5 @@ def donor_details(request, donor_id):
     context = {}
     donor = Donor.objects.get(id=donor_id)
     context['donor'] = donor
-    context['contribs'] = donor.schedulea_set.filter(active=True).order_by('-contribution_amount')
+    context['contribs'] = donor.contributions_2018.filter(active=True).order_by('-contribution_amount')
     return render(request, 'donor/donor_details.html', context)

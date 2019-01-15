@@ -13,6 +13,7 @@ from django.urls import reverse
 
 from cycle_2018.models import *
 from cycle_2018.forms import *
+from donor.models import Donor
 
 class Echo:
     """An object that implements just the write method of the file-like
@@ -315,7 +316,7 @@ def races(request):
     return render(request, '2018/races.html', {'races':races})
 
 def top_donors(request):
-    donors = sorted(Donor.objects.all(), key=lambda d: d.contribution_total, reverse=True)
+    donors = sorted(Donor.objects.all(), key=lambda d: d.contribution_total_2018, reverse=True)
     #this sort might be too slow for words once the database hits a reasonable size, but also maybe not bc we will never have that many named donors
     paginator = Paginator(donors, 50)
     page = request.GET.get('page')
