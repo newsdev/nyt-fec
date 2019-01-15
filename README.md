@@ -2,8 +2,8 @@
 
 ## Note!
 
-**VERSION 1.2 INCLUDES BREAKING CHANGES THAT COULD LEAD TO DATA LOSS!** The previous working version is tagged `working`
-If you would like to update to the current version, which supports multiple cycles, and you have data in your donors table, please update to v1.1, run the sql updates described [here](https://github.com/newsdev/nyt-fec/issues/63), and then go up to v1.2. Also strongly recommended to backup your whole database before doing any of this.
+**VERSION 1.1 INCLUDES BREAKING CHANGES THAT COULD LEAD TO DATA LOSS!** The previous working version is tagged `working`
+If you would like to update to the current version, which supports multiple cycles, and you have data in your donors table, please update to v1.0, run the sql updates described [here](https://github.com/newsdev/nyt-fec/issues/63), and then go up to v1.1. Also strongly recommended to backup your whole database before doing any of this.
 
 App is still kind of in the scratchpad phase, absolutely no promises that it works or I won't make breaking changes.
 
