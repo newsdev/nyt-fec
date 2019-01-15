@@ -261,24 +261,6 @@ class Filing(BaseModel):
         ]
 
 
-class Donor(BaseModel):
-    nyt_name = models.CharField(max_length=255, null=True, blank=True)
-    nyt_employer = models.CharField(max_length=255, null=True, blank=True)
-    nyt_occupation = models.CharField(max_length=255, null=True, blank=True)
-    nyt_note = models.TextField(null=True, blank=True)
-    city = models.CharField(max_length=255, null=True, blank=True)
-    state = models.CharField(max_length=255, null=True, blank=True)
-    contribution_total = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
-    
-    def save(self, *args, **kwargs):
-        self.contribution_total = self.schedulea_set.filter(active=True).aggregate(Sum('contribution_amount'))['contribution_amount__sum']
-        if not self.contribution_total:
-            self.contribution_total = 0
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.nyt_name
-
 class Transaction(BaseModel):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='ACTIVE')
     form_type = models.CharField(max_length=255, null=True, blank=True)
@@ -363,7 +345,7 @@ class ScheduleA(Transaction):
     occupation_search = SearchVectorField(null=True)
     address_search = SearchVectorField(null=True)
     old_donor_id = models.CharField(max_length=255, null=True, blank=True, help_text="terrible hack for editing donor totals, do not manually edit!")
-    donor = models.ForeignKey(Donor, null=True, blank=True, on_delete=models.SET_NULL)
+    donor = models.ForeignKey('donor.Donor', null=True, blank=True, related_name='contributions_2018', on_delete=models.SET_NULL)
     
     """
     these search fields require triggers. Please see migration 0015 which I hand-edited

@@ -20,8 +20,8 @@
         <td> <a href="{%url 'donor:donor_details' result.id %}">{{result.nyt_name}}</a> </td>
         <td> {{result.nyt_employer}} </td>
         <td>
-        {%if result.contribution_total > 0 %}
-             ${{result.contribution_total|floatformat:2|intcomma}}
+        {%if result.contribution_total_2018 > 0 %}
+             ${{result.contribution_total_2018|floatformat:2|intcomma}}
         {%else%}
             No matched contributions
         {%endif%}

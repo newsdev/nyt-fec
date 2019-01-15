@@ -22,6 +22,8 @@ So why not template or macro this switch out? One reason we're doing this whole 
    * In import statements in almost all files
    * In `dependencies ` in all migrations (even if sqashed)
    * In any url reverses in `views.py`
+   * In any reverse reference to a donor's contributions
+   * In the donor model, add fields for the next cycle contributions and make sure they are updated in `save()`
 1. In `settings.py` add the new app in `INSTALLED_APPS`
 1. In `templates`, copy over the previous cycle's folder and rename for the new cycle
 1. Inside each template file, update the date prefix for any forms/actions and the namespace for url reverses

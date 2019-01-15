@@ -68,5 +68,4 @@ class CandidateAdmin(admin.ModelAdmin):
 
 admin.site.register(ScheduleA, ScheduleAAdmin)
 admin.site.register(ScheduleE, ScheduleEAdmin)
-admin.site.register(Donor, DonorAdmin)
 admin.site.register(Candidate, CandidateAdmin)
