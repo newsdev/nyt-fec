@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load admin_urls %}
+
+
+{% block content %}
+
+<h2> Candidates </h2>
+<h5> Results as of {% if deadline %} {% if deadline|length == 8 %} {{deadline|slice:"4:6"}}/{{deadline|slice:"6:8"}}/{{deadline|slice:"0:4"}} {% else %} {{deadline}}{%endif%} {% else %} most recent available filing {% endif %} </h5>
+
+ <div class="text-right">
+        <a href="{{csv_url}}">Download as CSV</a>
+    </div>
+<table class="table">
+    <tr>
+        <th> Name </th>
+        <th> District </th>
+        <th> Total Receipts </th>
+        <th> Cash on hand</th>
+        <th> Unitemized </th>
+        <th> From candidate </th>
+        <th> As of date </th>
+        <th> Filed at </th>
+
+    </tr>
+    {% for candidate, filing in candidates %}
+    <tr>
+        <td> {{candidate.name}} </td>
+
+        <td> {{candidate.district}} </td>
+
+        {% if filing %}
+            <td class="text-right">
+                    ${{filing.cycle_total_receipts|floatformat:2|intcomma}}
+            </td>
+
+            <td class="text-right">
+                    ${{filing.cash_on_hand_close_of_period|floatformat:2|intcomma}}
+            </td>
+            <td class="text-right">
+                    ${{filing.cycle_individuals_unitemized|floatformat:2|intcomma}}
+            </td>
+            <td class="text-right">
+                    ${{filing.cycle_candidate_donations_plus_loans|floatformat:2|intcomma}}
+            </td>
+            <td>
+                    {% if filing.coverage_through_date|length == 8 %} {{filing.coverage_through_date|slice:"4:6"}}/{{filing.coverage_through_date|slice:"6:8"}}/{{filing.coverage_through_date|slice:"0:4"}} {% else %} {{filing.coverage_through_date}}{%endif%}
+            </td>
+            <td>{{filing.created}} </td>
+
+        {% else %}
+            <td>NA</td> <td>NA</td> <td>NA</td> <td>NA</td> <td>NA</td> <td>NA</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+
+
+
+{% endblock %}

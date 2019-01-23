@@ -22,7 +22,8 @@ INSTALLED_APPS = [
     'pure_pagination',
     'storages',
     'donor',
-    'cycle_2018'
+    'cycle_2018',
+    'cycle_2020'
 ]
 
 MIDDLEWARE = [

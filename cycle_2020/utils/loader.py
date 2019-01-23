@@ -9,13 +9,13 @@ import sys
 import urllib3
 import lxml
 from decimal import Decimal
-from cycle_2018.utils import logging
+from cycle_2020.utils import logging
 
 from bs4 import BeautifulSoup
 
 import process_filing #this is from fec2json
 
-from cycle_2018.models import *
+from cycle_2020.models import *
 from django.conf import settings
 
 
@@ -25,7 +25,7 @@ BAD_COMMITTEES = ['C00401224','C00630012'] #actblue; it starts today
 API_KEY = os.environ.get('FEC_API_KEY')
 assert API_KEY, "Cannot find a FEC api key, please add as environment variable FEC_API_KEY"
 
-from cycle_2018.cycle_settings import CYCLE
+from cycle_2020.cycle_settings import CYCLE
 def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
     #gets list of available filings from the FEC.
     #TODO: institute an API key pool or fallback?

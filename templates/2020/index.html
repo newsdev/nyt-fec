@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+<h2> 2020 campaign finance </h2>
+
+<p> <a href="{%url '2020:filings'%}">Filings</a> </p>
+<p> <a href="{%url '2020:contributions'%}">Contributions</a> </p>
+<p> <a href="{%url '2020:expenditures'%}">Expenditures</a> </p>
+<p> <a href="{%url '2020:ies'%}">Independent Expenditures</a> </p>
+<p> <a href="{%url '2020:races'%}">Races</a> </p>
+<p> <a href="{%url '2020:top_donors'%}">Top Donors</a> </p>
+
+<h3> Admin </h3>
+<p> <a href="{% url '2020:filing_status' 'failed'%}">Filings that failed to import</a></p>
+{% endblock %}

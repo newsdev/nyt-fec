@@ -23,8 +23,8 @@ class Donor(BaseModel):
     nyt_note = models.TextField(null=True, blank=True)
     city = models.CharField(max_length=255, null=True, blank=True)
     state = models.CharField(max_length=255, null=True, blank=True)
-    contribution_total_2018 = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
-    contribution_total_2020 = models.DecimalField(max_digits=12,decimal_places=2, null=True, blank=True)
+    contribution_total_2018 = models.DecimalField(max_digits=12,decimal_places=2, default=0)
+    contribution_total_2020 = models.DecimalField(max_digits=12,decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):
         self.contribution_total_2018 = self.contributions_2018.filter(active=True).aggregate(Sum('contribution_amount'))['contribution_amount__sum']

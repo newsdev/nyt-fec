@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load admin_urls %}
+
+
+{% block content %}
+
+
+<h2> Search for filings </h2>
+<div class="row">
+<form action="/2020/filings/" method="get">
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+</div>
+
+<table class="table">
+    <tr>
+        <th> Committee </th>
+        <th> Filing Type </th>
+        <th> Import time </th>
+        <th> Filing date </th>
+        <th> Receipts </th>
+        <th> Disbursements </th>
+        <th> Cash </th>
+        <th> IEs </th>
+    </tr>
+    {% for filing in results %}
+    <tr>
+        <td> <a href="{%url '2020:committee' filing.filer_id%}">{{filing.committee_name}}</a> </td>
+        <td> <a href="{{filing.url}}">{{filing.form}}</a> {% if filing.amends_filing %} (AMENDMENT) {% endif %} </td>
+        <td> {{filing.created}} </td>
+        <td> {% if filing.date_signed|length == 8 %} {{filing.date_signed|slice:"4:6"}}/{{filing.date_signed|slice:"6:8"}}/{{filing.date_signed|slice:"0:4"}} {% else %} {{filing.date_signed}}{%endif%}</td>
+        <td> <a href="{%url '2020:contributions'%}?filing_id={{filing.filing_id}}">${{filing.period_total_receipts|floatformat:2|intcomma}}</a>
+            {% if filing.period_total_receipts > 99999 %}
+                (<a href="{% url opts|admin_urlname:'changelist' %}?q={{filing.filing_id}}">Link donors</a>)
+                
+            {% endif %}
+        </td>
+        <td> <a href="{%url '2020:expenditures'%}?filing_id={{filing.filing_id}}">${{filing.period_total_disbursements|floatformat:2|intcomma}}</a> </td>
+        <td> ${{filing.cash_on_hand_close_of_period|floatformat:2|intcomma}} </td>
+        <td> <a href="{%url '2020:ies'%}?filing_id={{filing.filing_id}}">
+        {% if filing.form == 'F24' %}
+          ${{filing.computed_ie_total_for_f24|floatformat:2|intcomma}}
+        {% else %}
+          ${{filing.period_independent_expenditures|floatformat:2|intcomma}}
+        {% endif %}
+        
+    </a> </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% include 'pagination.html' %}
+
+        
+
+{% endblock %}

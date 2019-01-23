@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+
+
+<h2> {{committee.committee_name}} </h2>
+
+<div class="row">
+<dl>
+    <dt>Cycle total receipts</dt>
+    <dd><a href="{%url '2020:contributions'%}?committee={{committee.fec_id}}">${{most_recent_periodic.cycle_total_receipts|floatformat:2|intcomma}}</a></dd>
+
+    <dt>Cycle total disbursements</dt>
+    <dd><a href="{%url '2020:expenditures'%}?committee={{committee.fec_id}}">${{most_recent_periodic.cycle_total_disbursements|floatformat:2|intcomma}}</a></dd>
+</dl>
+</div>
+<div class="row">
+    <h3>Periodic filings</h3>
+</div>
+<div class="row">
+<table class="table">
+<tr>
+    <th>Form type</th>
+    <th>Period start</th>
+    <th>Period end</th>
+    <th>Receipts</th>
+    <th>Expends</th>
+    <th>Cash</th>
+    <th>Debts</th>
+</tr>
+{% for filing in periodic %}
+<tr>
+    <td> {{ filing.form_type }}</td>
+    <td> {{ filing.coverage_from_date }}</td>
+    <td> {{ filing.coverage_through_date }}</td>
+    <td class="text-right"> <a href="{%url '2020:contributions'%}?filing_id={{filing.filing_id}}">${{ filing.period_total_receipts|floatformat:2|intcomma }}</a></td>
+    <td class="text-right"> <a href="{%url '2020:expenditures'%}?filing_id={{filing.filing_id}}">${{ filing.period_total_disbursements|floatformat:2|intcomma }}</a></td>
+    <td class="text-right">${{ filing.cash_on_hand_close_of_period|floatformat:2|intcomma }}</td>
+    <td class="text-right"> ${{ filing.debts_by_summary|floatformat:2|intcomma }}</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+<div class="row">
+    <h3>Other filings</h3>
+</div>
+<div class="row">
+<table class="table">
+<tr>
+    <th>Form type</th>
+    <th>Date Signed</th>
+    <th>IEs</th>
+
+</tr>
+{% for filing in non_periodic %}
+<tr>
+    <td> {{ filing.form_type }}</td>
+    <td> {{ filing.date_signed }}</td>
+    <td class="text-right"> <a href="{%url '2020:ies'%}?filing_id={{filing.filing_id}}">${{ filing.computed_ie_total_for_f24|floatformat:2|intcomma }}</a></td>
+</tr>
+{% endfor %}
+
+
+</table>
+</div>
+
+{% endblock %}
