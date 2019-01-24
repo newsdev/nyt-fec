@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block navbar %}
+
+ <div class="navbar navbar-default navbar-primary">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/2018">fec 2018</span></a>
+        </div>
+        <ul class="nav navbar-nav navbar-left">
+          <li class="navbar-summary">
+            <span style="color: #333;font-weight:400;font-family: nyt-franklin;">
+                NYT-processed campaign finance data</span>
+          </li>
+        </ul>
+         <ul class="nav navbar-nav navbar-right navbar-bits">
+          <li><a href="{%url '2018:filings'%}">Filings</a></li>
+          <li><a href="{%url '2018:contributions'%}">Receipts</a></li>
+          <li><a href="{%url '2018:expenditures'%}">Expenditures</a></li>
+          <li><a href="{%url '2018:ies'%}">IEs</a></li>
+          <li><a href="{%url '2018:races'%}">Races</a></li>
+          <li><a href="/">Other years</a>
+        </ul>
+
+      </div>
+    </div>
+
+<div id="content" class="container">
+      {% block content %}{% endblock %}
+</div>
+
+{% endblock %}

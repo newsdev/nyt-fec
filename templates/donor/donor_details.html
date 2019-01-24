@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'cycle_independent_base.html' %}
 {% load humanize %}
 
 
@@ -15,20 +15,41 @@
 </div>
 
 <div>
-<h3> Contributions </h3>
+<h3> 2020 Contributions </h3>
 <table class='table'>
     <tr>
         <th>Committee</th>
         <th>Date</th>
         <th>Amount</th>
-    {% for contrib in contribs %}
+    {% for contrib in contribs2020 %}
+    </tr>
     <tr>
         <td>{{contrib.committee_name}}</td>
         <td>{{contrib.contribution_date_formatted}}</td>
         <td>${{contrib.contribution_amount|intcomma}}</td>
     </tr>
     {% endfor %}
-    
-</table>        
+</table>
+</div>
+
+
+<div>
+<h3> 2018 Contributions </h3>
+<table class='table'>
+    <tr>
+        <th>Committee</th>
+        <th>Date</th>
+        <th>Amount</th>
+    {% for contrib in contribs2018 %}
+    </tr>
+    <tr>
+        <td>{{contrib.committee_name}}</td>
+        <td>{{contrib.contribution_date_formatted}}</td>
+        <td>${{contrib.contribution_amount|intcomma}}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
 
 {% endblock %}

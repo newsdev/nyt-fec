@@ -9,5 +9,6 @@ def donor_details(request, donor_id):
     context = {}
     donor = Donor.objects.get(id=donor_id)
     context['donor'] = donor
-    context['contribs'] = donor.contributions_2018.filter(active=True).order_by('-contribution_amount')
+    context['contribs2018'] = donor.contributions_2018.filter(active=True).order_by('-contribution_amount')
+    context['contribs2020'] = donor.contributions_2020.filter(active=True).order_by('-contribution_amount')
     return render(request, 'donor/donor_details.html', context)
