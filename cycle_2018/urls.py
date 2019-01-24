@@ -9,7 +9,7 @@ router = routers.DefaultRouter()
 router.register(r'filings', FilingViewSet, base_name=Filing)
 
 
-API = [path('2018/api/v1/', include(router.urls))]
+API = [path('api/v1/', include(router.urls))]
 
 
 urlpatterns = API + [
