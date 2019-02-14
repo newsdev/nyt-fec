@@ -145,6 +145,7 @@ def check_existing_filings(filing):
     if len(existing_filings) > 0:
         #remove filings that were successful
         if existing_filings[0].status in ['SUCCESS','REFUSED']:
+            #print('already seen')
             return False
         else:
             #include filings that failed or are missing a status marker
@@ -153,12 +154,14 @@ def check_existing_filings(filing):
 def remove_bad_committees(filing):
     #remove bad committees:
     if filing['committee_id'] in BAD_COMMITTEES:
+        #print('bad committee')
         return False
     return True
 
 def check_acceptable_forms(filing):
     #remove filing types we're not loading
     if filing['form_type'].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
+        #print('bad form type')
         return False
     return True
 
@@ -166,12 +169,15 @@ def check_coverage_dates(filing, coverage_end):
     #remove filings whose coverage period ended outside the current cycle
     if coverage_end:
         coverage_end_year = coverage_end[0:4]
+        print(coverage_end_year)
         if filing['form_type'] in ['F3PN', 'F3PA'] and CYCLE % 4 == 0:
             #if it's a presidential filing, we want it if it's in the 4-year period.
-            acceptable_years = [CYCLE, CYCLE-1, CYCLE-3, CYCLE-4]
+            acceptable_years = [CYCLE, CYCLE-1, CYCLE-2, CYCLE-3]
         else:
             acceptable_years = [CYCLE, CYCLE-1]
+        #print(acceptable_years)
         if int(coverage_end_year) not in acceptable_years:
+            #print('bad year')
             return False
     return True
 
