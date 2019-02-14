@@ -166,7 +166,7 @@ def check_coverage_dates(filing, coverage_end):
     #remove filings whose coverage period ended outside the current cycle
     if coverage_end:
         coverage_end_year = coverage_end[0:4]
-        if filing['form_type'] == 'F3P' and CYCLE % 4 == 0:
+        if filing['form_type'] in ['F3PN', 'F3PA'] and CYCLE % 4 == 0:
             #if it's a presidential filing, we want it if it's in the 4-year period.
             acceptable_years = [CYCLE, CYCLE-1, CYCLE-3, CYCLE-4]
         else:
