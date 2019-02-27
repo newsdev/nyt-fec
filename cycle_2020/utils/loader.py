@@ -62,6 +62,7 @@ def get_filing_list(start_date, end_date, max_fails=10, waittime=10):
                     tags=["nyt-fec", "result:fail"])
                 return None
             time.sleep(waittime)
+            continue
 
         if len(results) == 0:
             break
