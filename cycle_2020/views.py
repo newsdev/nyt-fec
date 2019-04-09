@@ -410,6 +410,68 @@ def candidates_csv(request):
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
     return response
 
+
+def presidential_csv(request):
+    deadline = request.GET.get('deadline')
+
+    results = Candidate.objects.filter(office='P').order_by('party', 'name')
+    filename = "Candidates_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))
+
+    candidate_fields = ['name', 'office', 'party', 'incumbent']
+    filing_fields = ['filing_id','form','filer_id',
+            'committee_name', 'cash_on_hand_close_of_period', 'is_amendment',
+            'period_total_receipts','cycle_total_receipts',
+            'period_total_disbursements', 'cycle_total_disbursements',
+            'period_individuals_unitemized', 'cycle_individuals_unitemized',
+            'period_individuals_itemized', 'cycle_individuals_itemized',
+            'period_transfers_from_authorized','cycle_transfers_from_authorized']
+
+    def rows_with_totals():
+        yield candidate_fields+filing_fields+['cycle_candidate_donations_plus_loans','period_candidate_donations_plus_loans']
+        for result in results:
+            if deadline:
+                filing = result.filing_by_deadline(deadline)
+            else:
+                filing = result.most_recent_filing()
+
+            row = []
+            for f in candidate_fields:
+                value = getattr(result, f)
+                if value is None:
+                    row.append("")
+                else:
+                    row.append(value)
+            for f in filing_fields:
+                if not filing:
+                    row.append("")
+                    continue
+                value = getattr(filing, f)
+                if value is None:
+                    row.append("")
+                else:
+                    row.append(value)
+            if filing:
+                cycle_candidate_donations_plus_loans = filing.cycle_candidate_donations_plus_loans #this has to be done separately bc it's a property.
+                period_candidate_donations_plus_loans = filing.period_candidate_donations_plus_loans
+            if not filing or cycle_candidate_donations_plus_loans is None:
+                row.append("")
+            else:
+                row.append(cycle_candidate_donations_plus_loans)
+            if not filing or period_candidate_donations_plus_loans is None:
+                row.append("")
+            else:
+                row.append(period_candidate_donations_plus_loans)
+            yield row
+
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows_with_totals()),
+                                     content_type="text/csv")
+
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    return response
+
 def inaugural(request):
     form = InauguralForm(request.GET)
     if not request.GET:
