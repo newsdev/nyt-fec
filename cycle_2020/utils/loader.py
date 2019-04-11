@@ -592,15 +592,15 @@ def load_filing(filing, filename, filing_fieldnames):
         sche_count = 0
         if 'itemizations' in filing_dict:
             load_chunk_size = 20000
-            i = 0
             complete = False
             while not complete:
+                i = 0
                 itemization_dict = {}
                 while i < load_chunk_size:
                     try:
                         line = next(filing_dict['itemizations'])
+                        i += 1
                     except StopIteration:
-                        print("stopping")
                         complete = True
                         break
                     #print(line)
@@ -610,16 +610,16 @@ def load_filing(filing, filename, filing_fieldnames):
                     itemization_dict[itemization_type].append(line)
 
                 if 'SchA' in itemization_dict:
-                    scha_count = load_itemizations(ScheduleA, itemization_dict['SchA'])
+                    scha_count += load_itemizations(ScheduleA, itemization_dict['SchA'])
                 if 'SchB' in itemization_dict:
-                    schb_count = load_itemizations(ScheduleB, itemization_dict['SchB'])
+                    schb_count += load_itemizations(ScheduleB, itemization_dict['SchB'])
                 if 'SchE' in itemization_dict:
-                    sche_count = load_itemizations(ScheduleE, itemization_dict['SchE'])
+                    sche_count += load_itemizations(ScheduleE, itemization_dict['SchE'])
                 if 'F57' in itemization_dict:
                     sche_count += load_itemizations(ScheduleE, itemization_dict['F57'])
-                sys.stdout.write("inserted {} schedule A's\n".format(scha_count))
-                sys.stdout.write("inserted {} schedule B's\n".format(schb_count))
-                sys.stdout.write("inserted {} schedule E's\n".format(sche_count))
+            sys.stdout.write("inserted {} schedule A's\n".format(scha_count))
+            sys.stdout.write("inserted {} schedule B's\n".format(schb_count))
+            sys.stdout.write("inserted {} schedule E's\n".format(sche_count))
 
     except:
         #something failed in the transaction loading, keep the filing as failed
