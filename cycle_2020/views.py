@@ -445,6 +445,12 @@ def presidential_csv(request):
                     row.append(value)
             for f in filing_fields:
                 if not filing:
+                    if f == 'filer_id':
+                        #if there is no filing, use the candidate's committee id
+                        value = getattr(result, "fec_committee_id")
+                        if value is not None:
+                            row.append(value)
+                            continue
                     row.append("")
                     continue
                 value = getattr(filing, f)
