@@ -424,7 +424,9 @@ def presidential_csv(request):
             'period_total_disbursements', 'cycle_total_disbursements',
             'period_individuals_unitemized', 'cycle_individuals_unitemized',
             'period_individuals_itemized', 'cycle_individuals_itemized',
-            'period_transfers_from_authorized','cycle_transfers_from_authorized']
+            'period_transfers_from_authorized','cycle_transfers_from_authorized',
+            'period_individual_contribution_total', 'cycle_individual_contribution_total',
+            'coverage_from_date', 'coverage_through_date']
 
     def rows_with_totals():
         yield candidate_fields+filing_fields+['cycle_candidate_donations_plus_loans','period_candidate_donations_plus_loans']
