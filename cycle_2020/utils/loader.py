@@ -170,7 +170,7 @@ def check_coverage_dates(filing, coverage_end):
     #remove filings whose coverage period ended outside the current cycle
     if coverage_end:
         coverage_end_year = coverage_end[0:4]
-        print(coverage_end_year)
+        #print(coverage_end_year)
         if filing['form_type'] in ['F3PN', 'F3PA'] and CYCLE % 4 == 0:
             #if it's a presidential filing, we want it if it's in the 4-year period.
             acceptable_years = [CYCLE, CYCLE-1, CYCLE-2, CYCLE-3]
@@ -387,17 +387,21 @@ def evaluate_filing_file(filename, filing_id):
         try:
             next(reader)
         except:
+            #print('Filing has no lines!!')
             return False
         form_line = next(reader)
         if form_line[0].replace('A','').replace('N','') not in ACCEPTABLE_FORMS:
             create_or_update_filing_status(filing_id, 'REFUSED')
+            #print('Not loading forms of type {}, refused this filing'.format(form_line[0]))
             return False
         if form_line[1] in BAD_COMMITTEES:
             create_or_update_filing_status(filing_id, 'REFUSED')
+            #print('Not loading forms from committee {},refused this filing'.format(form_line[1]))
             return False
 
         #next, check if this filing has previously been refused
         if len(FilingStatus.objects.filter(filing_id=filing_id, status='REFUSED')) > 0:
+            #print('We\'ve already refused this filing!')
             return False
 
         #next check if we already have the filing
@@ -473,6 +477,7 @@ def load_filing(filing, filename, filing_fieldnames):
     #we check this before we download the filing, but this seems like worth re-checking in case someone manually downloaded a file or somehting
     coverage_end = filing_dict.get('coverage_through_date')
     if not check_coverage_dates(filing_dict, coverage_end):
+        #print('Not loading filings with end date {}'.format(coverage_end))
         create_or_update_filing_status(filing, 'REFUSED')
         return False
 
