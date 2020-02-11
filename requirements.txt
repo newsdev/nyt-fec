@@ -1,4 +1,4 @@
-Django==2.1.11
+Django==2.2.10
 psycopg2
 beautifulsoup4==4.6.0
 boto
