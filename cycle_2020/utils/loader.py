@@ -550,8 +550,16 @@ def load_filing(filing, filename, filing_fieldnames):
                                                                     dissemination_date__lte=coverage_end_date)
             by_dissemination_date.update(active=False, status='COVERED')
 
-
-    clean_filing_dict = clean_filing_fields(filing_dict, filing_fieldnames)
+    try:
+        clean_filing_dict = clean_filing_fields(filing_dict, filing_fieldnames)
+    except TypeError:
+        logging.log(title="Filing {} Failed".format(filing),
+            text='Failed cleaning filing, creating filing and marking as FAILED\n'.format(filing_dict['amends_filing'],filing),
+            tags=["nyt-fec", "result:fail"])
+        filing_obj = Filing.objects.create(filing_id=filing, status='FAILED')
+        filing_obj.save()
+        return False
+    
     clean_filing_dict['filing_id'] = filing
     clean_filing_dict['filer_id'] = filing_dict['filer_committee_id_number']
     
