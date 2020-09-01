@@ -6,7 +6,7 @@ from cycle_2018.api import *
 app_name = 'cycle_2018'
 
 router = routers.DefaultRouter()
-router.register(r'filings', FilingViewSet, base_name=Filing)
+router.register(r'filings', FilingViewSet, basename=Filing)
 
 
 API = [path('api/v1/', include(router.urls))]
