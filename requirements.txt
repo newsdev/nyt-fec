@@ -9,6 +9,6 @@ djangorestframework
 django-pure-pagination
 django-localflavor
 -e git+https://github.com/newsdev/fec2json@2312bfb088e42bf969fd332e0ecb62162f198228#egg=fec2json
-lxml==4.2.1
+lxml==4.6.3
 requests
 
